@@ -24,10 +24,13 @@ priorities shift based on feedback. Want something sooner?
 - [x] Multi-arch images (amd64 + arm64)
 - [x] Folder-level intelligence, phase 2 — nested units, launcher artifacts, engine data
 - [x] Media library enhancements — multi-episode, anime numbering, release-scene movies, ep titles
+- [x] ROM & console classification — 40+ consoles, zipped ROMs (content peek), folder-name hints
+- [x] Homebrew and emulator detection with dedicated destinations
+- [x] CA-compatible template ships in-repo (`templates/unraid-file-organizer/`)
 
 ## 🎯 Next Up
 
-- [ ] **Community Applications template** — one-click install from Unraid CA
+- [ ] **Community Applications listing** — submit the template to the official CA app feed
 
 ## 🔭 Exploring
 

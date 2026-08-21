@@ -74,6 +74,17 @@ Prefer releases over git? Images are published to GHCR on every release:
 docker pull ghcr.io/wildfirebill-organize/unraid-file-organizer:latest
 ```
 
+### Install via Community Applications
+
+In Unraid's **Apps** tab → ⚙️ Settings → **Add repository** → paste:
+
+```
+https://github.com/wildfirebill-organize/unraid-file-organizer
+```
+
+The app then appears in your Apps search with the template pre-filled
+(port, `/mnt/user` mount, `/config` appdata, and an optional Ollama URL variable).
+
 ## 🧠 How It Works
 
 Classification runs in tiers, fastest first:
