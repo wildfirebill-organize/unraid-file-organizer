@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an idea for the organizer
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What messy-file situation does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: checkboxes
+    id: roadmap-check
+    attributes:
+      label: Roadmap check
+      description: Have you checked ROADMAP.md for this idea?
+      options:
+        - label: I checked the roadmap and this isn't already listed/planned differently
+          required: true
+  - type: dropdown
+    id: safety
+    attributes:
+      label: Does this affect the safety model?
+      description: Dry-run, allow-list, never-overwrite, or undo behavior
+      options:
+        - "No"
+        - "Yes"
+        - "Unsure"
+    validations:
+      required: true

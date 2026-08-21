@@ -1,0 +1,49 @@
+name: Bug report
+description: Something moved that shouldn't have, crashed, or classified wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. **Never paste file paths containing personal data or secrets.**
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include steps to reproduce and what you expected instead
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Classification (wrong category/intent)
+        - Scan (missing files, wrong folders scanned)
+        - Plan/Apply (bad moves, duplicates, overwrite)
+        - Undo
+        - LLM Assist
+        - UI
+        - Deployment/Docker
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Unraid version, Docker version
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      render: shell

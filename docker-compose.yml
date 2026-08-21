@@ -1,0 +1,16 @@
+services:
+  unraid-organizer:
+    build: .
+    image: unraid-organizer:latest
+    container_name: unraid-organizer
+    restart: unless-stopped
+    # Lets the default Ollama URL (host.docker.internal) reach a container on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8787:8787"
+    volumes:
+      # All shares you may want to organize — mount the whole user share tree
+      - /mnt/user:/mnt/user
+      # Persistent config + operation log (create this folder first)
+      - /mnt/user/appdata/unraid-organizer:/config

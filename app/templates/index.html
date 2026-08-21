@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unraid File Organizer</title>
+<style>
+  :root {
+    --bg: #1a1d21; --panel: #23272c; --panel2: #2b3036; --border: #3a4048;
+    --text: #e4e7eb; --muted: #9aa3ad; --accent: #f15a2c; --accent2: #e2492a;
+    --green: #48b568; --red: #e05252; --yellow: #e0b34a; --blue: #4a90d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+  header { background: var(--panel); border-bottom: 2px solid var(--accent); padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .spacer { flex: 1; }
+  .badge { padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .badge.dry { background: var(--yellow); color: #000; }
+  .badge.live { background: var(--red); color: #fff; }
+  main { display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px 20px; max-width: 1600px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--panel2); display:flex; align-items:center; justify-content: space-between;}
+  .card .body { padding: 14px; }
+
+  /* Path rows */
+  .path-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; margin-bottom: 4px; }
+  .path-row:hover { background: var(--panel2); }
+  .path-row input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .path-row .p-label { flex: 1; min-width: 0; }
+  .path-row .p-path { color: var(--muted); font-size: 12px; word-break: break-all; }
+  .path-row .p-name { font-weight: 500; }
+  .path-row.disallowed { opacity: .75; }
+  .icon-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; }
+  .icon-btn:hover { color: var(--red); background: rgba(224,82,82,.12); }
+
+  .add-row { display: flex; gap: 6px; margin-top: 10px; }
+  .add-row input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 7px 10px; border-radius: 6px; font-size: 13px; }
+  .add-row input:focus { outline: none; border-color: var(--accent); }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn:hover { background: var(--accent2); }
+  .btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
+  .btn.secondary:hover { border-color: var(--accent); }
+  .btn.danger { background: var(--red); }
+  .btn.green { background: var(--green); color:#000; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .settings-grid { display: grid; gap: 12px; }
+  .settings-grid label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .settings-grid select, .settings-grid input[type=number] { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 7px 10px; border-radius: 6px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+  .toggle-row input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+
+  /* Results */
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar input[type=text] { flex: 1; min-width: 180px; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; }
+  .chip { padding: 4px 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--panel2); color: var(--muted); cursor: pointer; font-size: 12px; }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel2); z-index: 1;}
+  td { padding: 7px 10px; border-bottom: 1px solid rgba(58,64,72,.4); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; word-break: break-all; }
+  .cat-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .conf-bar { width: 46px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; display:inline-block; vertical-align: middle; margin-right:6px;}
+  .conf-bar i { display:block; height:100%; }
+  .scrollbox { max-height: 520px; overflow-y: auto; }
+
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stat { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 110px; }
+  .stat b { display: block; font-size: 20px; }
+  .stat span { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+
+  .status-done { color: var(--green); } .status-skipped { color: var(--yellow); } .status-error { color: var(--red); } .status-pending { color: var(--blue); }
+  .empty { text-align:center; color: var(--muted); padding: 40px 20px; }
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel2); border: 1px solid var(--border); border-left: 4px solid var(--accent); padding: 12px 18px; border-radius: 8px; max-width: 420px; box-shadow: 0 4px 20px rgba(0,0,0,.5); display:none; z-index:99; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗂️ Unraid File Organizer</h1>
+  <span id="modeBadge" class="badge dry">DRY RUN</span>
+  <div class="spacer"></div>
+  <button class="btn secondary" onclick="undoLast()">↩ Undo Last Apply</button>
+  <button class="btn" onclick="runScan()">🔍 Scan</button>
+</header>
+
+<main>
+  <!-- LEFT COLUMN -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="card">
+      <h2>✅ Allowed Locations <span style="font-weight:400;text-transform:none">checked = may move files</span></h2>
+      <div class="body">
+        <div id="managedList"></div>
+        <div class="add-row">
+          <input type="text" id="newManagedPath" placeholder="/mnt/user/downloads">
+          <button class="btn" onclick="addManaged()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🚫 Never Touch</h2>
+      <div class="body">
+        <div id="disallowList"></div>
+        <div class="add-row">
+          <input type="text" id="newDisallowPath" placeholder="/mnt/user/appdata">
+          <button class="btn" onclick="addDisallow()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📏 Custom Rules <span style="font-weight:400;text-transform:none">first match wins · outranks heuristics</span></h2>
+      <div class="body">
+        <div id="rulesList"></div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:600">+ Add rule</summary>
+          <div style="display:grid;gap:8px;margin-top:10px;">
+            <input type="text" id="rulePattern" placeholder="Regex — e.g. ^game_.*\.exe$" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+            <div style="display:flex;gap:6px;">
+              <select id="ruleMatchOn" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;">
+                <option value="filename">filename</option>
+                <option value="path">full path</option>
+              </select>
+              <select id="ruleCategory" style="flex:2;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;"></select>
+              <select id="ruleIntent" style="flex:2;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;"></select>
+            </div>
+            <input type="text" id="ruleDest" placeholder="Destination override (optional) — /mnt/user/games/windows/" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+            <button class="btn" onclick="addRule()">Add Rule</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🎯 Destination Overrides <span style="font-weight:400;text-transform:none">category = path per line</span></h2>
+      <div class="body">
+        <textarea id="destOverrides" rows="5" placeholder="media_audio=/mnt/user/media/music&#10;os_image=/mnt/user/isos"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:12px;"
+          onchange="saveConfig()"></textarea>
+        <small style="color:var(--muted)">Overrides built-in destinations for every file in that category.</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Settings</h2>
+      <div class="body settings-grid">
+        <div class="toggle-row">
+          <span><b>Dry Run Mode</b><br><small style="color:var(--muted)">Preview moves without touching files</small></span>
+          <input type="checkbox" id="dryRun" onchange="saveConfig()">
+        </div>
+        <div>
+          <label>Destination root</label>
+          <input type="text" id="destRoot" onchange="saveConfig()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+        </div>
+        <div>
+          <label>Minimum confidence: <span id="minConfVal">0.60</span></label>
+          <input type="range" id="minConfidence" min="0" max="100" value="60" oninput="document.getElementById('minConfVal').textContent=(this.value/100).toFixed(2)" onchange="saveConfig()" style="width:100%">
+        </div>
+        <div>
+          <label>When destination exists</label>
+          <select id="dupPolicy" onchange="saveConfig()">
+            <option value="rename">Rename (file (1).ext)</option>
+            <option value="skip">Skip file</option>
+          </select>
+        </div>
+        <div class="toggle-row">
+          <span><b>🤖 LLM Assist</b><br><small style="color:var(--muted)">Ollama re-classifies low-confidence files</small></span>
+          <input type="checkbox" id="llmEnabled" onchange="toggleLlm(); saveConfig()">
+        </div>
+        <div id="llmSettings" style="display:none; border:1px solid var(--border); border-radius:6px; padding:12px; background:var(--bg);">
+          <div>
+            <label>Ollama URL</label>
+            <input type="text" id="ollamaUrl" onchange="saveConfig()" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <div style="margin-top:8px">
+            <label>Model</label>
+            <input type="text" id="ollamaModel" onchange="saveConfig()" placeholder="qwen2.5:3b" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <div style="margin-top:8px">
+            <label>Max files per scan sent to LLM</label>
+            <input type="number" id="llmMaxFiles" min="0" max="1000" onchange="saveConfig()" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <button class="btn secondary" onclick="checkLlm()">Test connection</button>
+            <span id="llmStatus" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span><b>⏰ Scheduled Scans</b><br><small style="color:var(--muted)">Automatic dry-run digest — never moves files</small></span>
+          <input type="checkbox" id="schedEnabled" onchange="toggleSched(); saveConfig()">
+        </div>
+        <div id="schedSettings" style="display:none; border:1px solid var(--border); border-radius:6px; padding:12px; background:var(--bg);">
+          <div>
+            <label>Interval (hours)</label>
+            <input type="number" id="schedInterval" min="1" max="720" onchange="saveConfig()" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <button class="btn secondary" onclick="runScheduledNow()">Run now</button>
+            <span id="schedStatus" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span><b>🔔 Notifications</b><br><small style="color:var(--muted)">Webhook digests & apply summaries</small></span>
+          <input type="checkbox" id="notifyEnabled" onchange="toggleNotify(); saveConfig()">
+        </div>
+        <div id="notifySettings" style="display:none; border:1px solid var(--border); border-radius:6px; padding:12px; background:var(--bg);">
+          <div>
+            <label>Type</label>
+            <select id="notifyType" onchange="saveConfig()" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+              <option value="generic">Generic JSON webhook</option>
+              <option value="discord">Discord</option>
+              <option value="ntfy">ntfy</option>
+            </select>
+          </div>
+          <div style="margin-top:8px">
+            <label>Webhook URL</label>
+            <input type="text" id="notifyUrl" onchange="saveConfig()" placeholder="https://…" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <button class="btn secondary" onclick="testNotify()">Send test</button>
+            <span id="notifyStatus" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span><b>🎬 Media Library Mode</b><br><small style="color:var(--muted)">Route TV/movies into Plex-style folders</small></span>
+          <input type="checkbox" id="mediaEnabled" onchange="toggleMedia(); saveConfig()">
+        </div>
+        <div id="mediaSettings" style="display:none; border:1px solid var(--border); border-radius:6px; padding:12px; background:var(--bg);">
+          <div>
+            <label>Library root</label>
+            <input type="text" id="mediaRoot" onchange="saveConfig()" placeholder="/mnt/user/media" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+          </div>
+          <small style="color:var(--muted)">Show S01E02.mkv → <b>&lt;root&gt;/TV Shows/Show/Season 01/</b> · Movie (2010).mp4 → <b>&lt;root&gt;/Movies/Movie (2010)/</b></small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="summary" id="summaryBar" style="display:none;"></div>
+
+    <div class="card">
+      <h2>📋 Scan Results
+        <div style="display:flex;gap:8px;">
+          <button class="btn secondary" onclick="buildPlan()">Build Plan</button>
+          <button class="btn green" id="applyBtn" onclick="applyPlan()" disabled>Apply Plan</button>
+        </div>
+      </h2>
+      <div class="body">
+        <div class="toolbar">
+          <input type="text" id="searchBox" placeholder="Filter files…" oninput="renderResults()">
+          <span id="chips"></span>
+        </div>
+        <div class="scrollbox">
+          <table id="resultsTable">
+            <thead><tr>
+              <th style="width:30px"><input type="checkbox" id="selectAll" onchange="toggleAll(this)" checked></th>
+              <th>File</th><th>Type</th><th>Intent</th><th>Conf.</th><th>Suggested Destination</th>
+            </tr></thead>
+            <tbody id="resultsBody"><tr><td colspan="6" class="empty">Run a scan to see files here.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="planCard" style="display:none;">
+      <h2>📦 Move Plan <span id="planMeta" style="font-weight:400;text-transform:none"></span></h2>
+      <div class="body scrollbox" style="max-height:300px;">
+        <table><thead><tr><th>Action</th><th>From</th><th>To</th></tr></thead><tbody id="planBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧬 Duplicates
+        <button class="btn secondary" onclick="findDuplicates()">Find Duplicates</button>
+      </h2>
+      <div class="body">
+        <div id="dupSummary" style="margin-bottom:10px;font-size:13px;color:var(--muted)"></div>
+        <div class="scrollbox" id="dupWrap" style="display:none; max-height:300px;">
+          <table><thead><tr><th style="width:30px">Dup</th><th>File</th><th>Size</th><th>Keep?</th></tr></thead><tbody id="dupBody"></tbody></table>
+        </div>
+        <div id="dupActions" style="display:none; margin-top:10px; display:flex; gap:8px;">
+          <button class="btn danger" onclick="quarantineSelected()">Move selected to quarantine</button>
+          <span style="font-size:12px;color:var(--muted);align-self:center">Reversible via Undo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📈 Scan History</h2>
+      <div class="body">
+        <div id="historyChart" style="margin-bottom:12px;"></div>
+        <div class="scrollbox" style="max-height:260px;">
+          <table><thead><tr><th>When</th><th>Trigger</th><th>Files</th><th>Movable</th><th>Size</th></tr></thead><tbody id="historyBody"><tr><td colspan="5" class="empty">No scans recorded yet.</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+let config = null;
+let scanItems = [];
+let plan = null;
+let activeCat = 'all';
+
+const CAT_COLORS = {
+  executable_windows:'#e05252', executable_android:'#4a90d9', executable_linux:'#48b568',
+  executable_macos:'#9aa3ad', os_image:'#e0b34a', archive:'#b07ad9', document:'#4ac0d9',
+  media_audio:'#48b568', media_video:'#e08a4a', media_image:'#d94a9a', code_source:'#4a90d9',
+  unknown:'#666'
+};
+const RULE_CATS = ['executable_windows','executable_linux','executable_macos','executable_android',
+  'os_image','archive','document','media_audio','media_video','media_image','code_source',
+  'config','database','log','temp'];
+const RULE_INTENTS = ['music_player','network_tool','system_utility','game','development_tool',
+  'office_app','media_player','archive_tool','os_component','driver','data_file'];
+
+function toast(msg, ms=3500){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',ms); }
+async function api(path, opts={}){ const r = await fetch('/api'+path,{headers:{'Content-Type':'application/json'},...opts}); if(!r.ok){ const e=await r.json().catch(()=>({detail:r.statusText})); throw new Error(e.detail||r.statusText);} return r.json(); }
+function fmtSize(b){ if(!b&&b!==0)return''; const u=['B','KB','MB','GB','TB']; let i=0,n=b; while(n>=1024&&i<u.length-1){n/=1024;i++;} return n.toFixed(i?1:0)+' '+u[i]; }
+
+async function loadConfig(){
+  config = await api('/config');
+  renderPaths(); applySettingsToForm();
+}
+
+function applySettingsToForm(){
+  document.getElementById('dryRun').checked = config.dry_run;
+  document.getElementById('destRoot').value = config.destination_root;
+  document.getElementById('minConfidence').value = Math.round(config.min_confidence*100);
+  document.getElementById('minConfVal').textContent = config.min_confidence.toFixed(2);
+  document.getElementById('dupPolicy').value = config.duplicate_policy;
+  document.getElementById('llmEnabled').checked = !!config.llm_enabled;
+  document.getElementById('ollamaUrl').value = config.ollama_url || '';
+  document.getElementById('ollamaModel').value = config.ollama_model || '';
+  document.getElementById('llmMaxFiles').value = config.llm_max_files ?? 100;
+  document.getElementById('schedEnabled').checked = !!config.schedule_enabled;
+  document.getElementById('schedInterval').value = config.schedule_interval_hours ?? 24;
+  document.getElementById('notifyEnabled').checked = !!config.notify_enabled;
+  document.getElementById('notifyType').value = config.notify_type || 'generic';
+  document.getElementById('notifyUrl').value = config.notify_url || '';
+  document.getElementById('mediaEnabled').checked = !!config.media_library_enabled;
+  document.getElementById('mediaRoot').value = config.media_library_root || '/mnt/user/media';
+  toggleLlm(); toggleSched(); toggleNotify(); toggleMedia();
+  renderRules();
+  loadOverridesEditor();
+  refreshScheduleStatus();
+  loadHistory();
+  updateModeBadge();
+}
+function toggleLlm(){
+  const on = document.getElementById('llmEnabled').checked;
+  document.getElementById('llmSettings').style.display = on ? 'block' : 'none';
+}
+function toggleSched(){
+  const on = document.getElementById('schedEnabled').checked;
+  document.getElementById('schedSettings').style.display = on ? 'block' : 'none';
+}
+function toggleNotify(){
+  const on = document.getElementById('notifyEnabled').checked;
+  document.getElementById('notifySettings').style.display = on ? 'block' : 'none';
+}
+async function refreshScheduleStatus(){
+  try{
+    const s = await api('/schedule/status');
+    const el = document.getElementById('schedStatus');
+    if(!s.enabled){ el.textContent=''; return; }
+    const last = s.last_run ? new Date(s.last_run+'Z').toLocaleString() : 'never';
+    const next = s.next_run ? new Date(s.next_run+'Z').toLocaleString() : '?';
+    el.textContent = `Last: ${last} · Next: ${next}`;
+  }catch(e){}
+}
+async function runScheduledNow(){
+  toast('Running scheduled scan (dry-run)…');
+  try{
+    const d = await api('/schedule/run-now',{method:'POST'});
+    toast(`Digest: ${d.movable_files} of ${d.total_files} files ready to move`,5000);
+    refreshScheduleStatus();
+  }catch(e){ toast('Failed: '+e.message); }
+}
+async function testNotify(){
+  const el = document.getElementById('notifyStatus');
+  el.textContent='Sending…'; el.style.color='var(--muted)';
+  try{
+    const r = await api('/notify/test',{method:'POST'});
+    el.textContent = r.detail;
+    el.style.color = r.ok ? 'var(--green)' : 'var(--red)';
+  }catch(e){ el.textContent=e.message; el.style.color='var(--red)'; }
+}
+function toggleMedia(){
+  const on = document.getElementById('mediaEnabled').checked;
+  document.getElementById('mediaSettings').style.display = on ? 'block' : 'none';
+}
+
+// ---------- Scan history ----------
+async function loadHistory(){
+  try{
+    const entries = await api('/history?limit=50');
+    const tb = document.getElementById('historyBody');
+    if(!entries.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No scans recorded yet.</td></tr>'; document.getElementById('historyChart').innerHTML=''; return; }
+    tb.innerHTML = entries.map(e=>`<tr>
+      <td class="mono">${new Date(e.timestamp+'Z').toLocaleString()}</td>
+      <td>${e.trigger==='scheduled'?'⏰ scheduled':'manual'}</td>
+      <td>${e.total_files}</td>
+      <td><b style="color:var(--accent)">${e.movable_files}</b></td>
+      <td>${fmtSize(e.total_size_bytes)}</td></tr>`).join('');
+    renderHistoryChart(entries);
+  }catch(e){}
+}
+function renderHistoryChart(entries){
+  const data = [...entries].reverse().slice(-24); // oldest → newest
+  const max = Math.max(...data.map(e=>e.movable_files), 1);
+  const W=100, H=40, bw=W/data.length;
+  const bars = data.map((e,i)=>{
+    const h = Math.max(1, (e.movable_files/max)*H);
+    return `<rect x="${(i*bw).toFixed(2)}" y="${(H-h).toFixed(2)}" width="${(bw-0.8).toFixed(2)}" height="${h.toFixed(2)}" fill="var(--accent)" rx="0.8"><title>${new Date(e.timestamp+'Z').toLocaleString()}: ${e.movable_files} movable</title></rect>`;
+  }).join('');
+  document.getElementById('historyChart').innerHTML =
+    `<div style="font-size:11px;color:var(--muted);margin-bottom:4px">Movable files per scan (last ${data.length})</div>
+     <svg viewBox="0 0 ${W} ${H}" width="100%" height="60" preserveAspectRatio="none" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;">${bars}</svg>`;
+}
+
+// ---------- Duplicates ----------
+let dupReport = null;
+async function findDuplicates(){
+  toast('Hashing files — this can take a while…', 5000);
+  try{
+    dupReport = await api('/duplicates/scan',{method:'POST'});
+    renderDuplicates();
+    toast(`Found ${dupReport.groups.length} duplicate groups · ${fmtSize(dupReport.wasted_bytes)} reclaimable`,6000);
+  }catch(e){ toast('Duplicate scan failed: '+e.message); }
+}
+function renderDuplicates(){
+  const wrap=document.getElementById('dupWrap'), body=document.getElementById('dupBody'), actions=document.getElementById('dupActions');
+  if(!dupReport || !dupReport.groups.length){
+    document.getElementById('dupSummary').textContent = dupReport ? `No duplicates found across ${dupReport.scanned_files} files.` : '';
+    wrap.style.display='none'; actions.style.display='none'; return;
+  }
+  document.getElementById('dupSummary').innerHTML =
+    `<b style="color:var(--text)">${dupReport.groups.length} groups</b> · ${dupReport.scanned_files} files hashed · <b style="color:var(--yellow)">${fmtSize(dupReport.wasted_bytes)}</b> reclaimable`;
+  let rows='';
+  dupReport.groups.forEach((g,gi)=>{
+    rows+=`<tr><td colspan="4" style="background:var(--panel2);font-size:11px;color:var(--muted)">Group ${gi+1} — identical content (${fmtSize(g.size_bytes)} each)</td></tr>`;
+    g.files.forEach((f,fi)=>{
+      const isKeep = f===g.keep;
+      rows+=`<tr>
+        <td>${isKeep?'':`<input type="checkbox" class="dup-check" data-path="${escAttr(f)}" checked>`}</td>
+        <td class="mono">${esc(f)}</td>
+        <td>${fmtSize(g.size_bytes)}</td>
+        <td>${isKeep?'<span style="color:var(--green)">✓ original</span>':'<span style="color:var(--red)">duplicate</span>'}</td></tr>`;
+    });
+  });
+  body.innerHTML=rows;
+  wrap.style.display='block';
+  actions.style.display='flex';
+}
+async function quarantineSelected(){
+  const paths=[...document.querySelectorAll('.dup-check:checked')].map(c=>c.dataset.path);
+  if(!paths.length) return toast('No duplicates selected');
+  if(config.dry_run!==false && !confirm(`Dry run is ON — nothing will move.\n${paths.length} files would go to quarantine.`)) return;
+  if(config.dry_run===false && !confirm(`⚠️ Move ${paths.length} duplicate files to /mnt/user/quarantine/duplicates/?`)) return;
+  try{
+    const r=await api('/duplicates/quarantine',{method:'POST',body:JSON.stringify({selected_paths:paths})});
+    const s=r.summary;
+    toast(`${r.dry_run?'[DRY RUN] ':''}${s.statuses.done||0} moved to quarantine, ${s.statuses.skipped||0} skipped`,6000);
+    findDuplicates();
+  }catch(e){ toast('Quarantine failed: '+e.message); }
+}
+async function checkLlm(){
+  const el = document.getElementById('llmStatus');
+  el.textContent = 'Checking…'; el.style.color = 'var(--muted)';
+  try{
+    const r = await api('/llm/status');
+    el.textContent = r.detail;
+    el.style.color = r.reachable ? 'var(--green)' : 'var(--red)';
+  }catch(e){ el.textContent = e.message; el.style.color = 'var(--red)'; }
+}
+function updateModeBadge(){ const b=document.getElementById('modeBadge'); const dry=config?.dry_run!==false; b.textContent=dry?'DRY RUN':'LIVE MOVES'; b.className='badge '+(dry?'dry':'live'); }
+
+function renderPaths(){
+  const m = document.getElementById('managedList');
+  m.innerHTML = '';
+  config.managed_paths.forEach((p,i)=>{
+    const row = document.createElement('div'); row.className='path-row';
+    row.innerHTML = `<input type="checkbox" ${p.enabled?'checked':''} onchange="config.managed_paths[${i}].enabled=this.checked; saveConfig()">
+      <div class="p-label"><div class="p-name">${esc(p.label||p.path)}</div><div class="p-path">${esc(p.path)}</div></div>
+      <button class="icon-btn" title="Remove" onclick="removeManaged(${i})">✕</button>`;
+    m.appendChild(row);
+  });
+  if(!config.managed_paths.length) m.innerHTML='<div class="empty" style="padding:12px">No allowed locations yet.</div>';
+
+  const d = document.getElementById('disallowList');
+  d.innerHTML='';
+  config.disallow_paths.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='path-row disallowed';
+    row.innerHTML=`<span style="color:var(--red)">🚫</span>
+      <div class="p-label"><div class="p-path">${esc(p.path)}</div>${p.label?`<div class="p-name" style="font-size:11px;color:var(--muted)">${esc(p.label)}</div>`:''}</div>
+      <button class="icon-btn" onclick="removeDisallow(${i})">✕</button>`;
+    d.appendChild(row);
+  });
+}
+
+async function saveConfig(){
+  config.dry_run = document.getElementById('dryRun').checked;
+  config.destination_root = document.getElementById('destRoot').value.trim() || '/mnt/user';
+  config.min_confidence = parseInt(document.getElementById('minConfidence').value)/100;
+  config.duplicate_policy = document.getElementById('dupPolicy').value;
+  config.llm_enabled = document.getElementById('llmEnabled').checked;
+  config.ollama_url = document.getElementById('ollamaUrl').value.trim() || 'http://host.docker.internal:11434';
+  config.ollama_model = document.getElementById('ollamaModel').value.trim() || 'qwen2.5:3b';
+  config.llm_max_files = parseInt(document.getElementById('llmMaxFiles').value) || 100;
+  config.schedule_enabled = document.getElementById('schedEnabled').checked;
+  config.schedule_interval_hours = parseInt(document.getElementById('schedInterval').value) || 24;
+  config.notify_enabled = document.getElementById('notifyEnabled').checked;
+  config.notify_type = document.getElementById('notifyType').value;
+  config.notify_url = document.getElementById('notifyUrl').value.trim();
+  config.media_library_enabled = document.getElementById('mediaEnabled').checked;
+  config.media_library_root = document.getElementById('mediaRoot').value.trim() || '/mnt/user/media';
+  try { config.category_destinations = parseOverrides(); }
+  catch(e){ toast(e.message); return; }
+  try{ config = await api('/config',{method:'PUT',body:JSON.stringify(config)}); toast('Settings saved'); updateModeBadge(); renderRules(); loadOverridesEditor(); }
+  catch(e){ toast('Save failed: '+e.message); loadConfig(); }
+}
+
+async function addManaged(){
+  const inp=document.getElementById('newManagedPath'); const p=inp.value.trim();
+  if(!p) return;
+  config.managed_paths.push({path:p,label:p.split('/').pop()||p,enabled:true});
+  try{ await saveConfig(); inp.value=''; renderPaths(); }catch(e){ toast(e.message); config.managed_paths.pop(); }
+}
+function removeManaged(i){ config.managed_paths.splice(i,1); saveConfig().then(renderPaths); }
+async function addDisallow(){
+  const inp=document.getElementById('newDisallowPath'); const p=inp.value.trim();
+  if(!p) return;
+  config.disallow_paths.push({path:p,label:''});
+  try{ await saveConfig(); inp.value=''; renderPaths(); }catch(e){ toast(e.message); config.disallow_paths.pop(); }
+}
+function removeDisallow(i){ config.disallow_paths.splice(i,1); saveConfig().then(renderPaths); }
+
+function renderRules(){
+  const el = document.getElementById('rulesList');
+  const catSel = document.getElementById('ruleCategory');
+  const intSel = document.getElementById('ruleIntent');
+  if (!catSel.options.length) {
+    catSel.innerHTML = '<option value="">category…</option>' + RULE_CATS.map(c=>`<option>${c}</option>`).join('');
+    intSel.innerHTML = '<option value="">intent…</option>' + RULE_INTENTS.map(i=>`<option>${i}</option>`).join('');
+  }
+  el.innerHTML = '';
+  (config.custom_rules||[]).forEach((r,i)=>{
+    const row = document.createElement('div'); row.className='path-row';
+    const dest = r.destination ? ` → <span style="color:var(--green)">${esc(r.destination)}</span>` : '';
+    row.innerHTML = `<input type="checkbox" ${r.enabled?'checked':''} onchange="config.custom_rules[${i}].enabled=this.checked; saveConfig()">
+      <div class="p-label"><div class="p-name mono" style="font-size:12px">${esc(r.pattern)}</div>
+      <div class="p-path">${esc(r.match_on)} → ${esc(r.category||'(keep)')} / ${esc(r.intent||'(keep)')}${dest}</div></div>
+      <button class="icon-btn" onclick="removeRule(${i})">✕</button>`;
+    el.appendChild(row);
+  });
+  if(!(config.custom_rules||[]).length) el.innerHTML='<div class="empty" style="padding:12px">No custom rules.</div>';
+}
+async function addRule(){
+  const pattern = document.getElementById('rulePattern').value.trim();
+  if(!pattern) return toast('Pattern required');
+  try { new RegExp(pattern); } catch(e) { return toast('Invalid regex: '+e.message); }
+  config.custom_rules = config.custom_rules || [];
+  config.custom_rules.push({
+    name: '', pattern,
+    match_on: document.getElementById('ruleMatchOn').value,
+    category: document.getElementById('ruleCategory').value || null,
+    intent: document.getElementById('ruleIntent').value || null,
+    destination: document.getElementById('ruleDest').value.trim() || null,
+    enabled: true,
+  });
+  try{
+    await saveConfig();
+    document.getElementById('rulePattern').value='';
+    document.getElementById('ruleDest').value='';
+    renderRules(); toast('Rule added');
+  }catch(e){ toast(e.message); config.custom_rules.pop(); }
+}
+function removeRule(i){ config.custom_rules.splice(i,1); saveConfig().then(renderRules); }
+
+function loadOverridesEditor(){
+  const pairs = Object.entries(config.category_destinations||{})
+    .map(([k,v])=>`${k}=${v}`).join('\n');
+  document.getElementById('destOverrides').value = pairs;
+}
+function parseOverrides(){
+  const out = {};
+  for (const line of document.getElementById('destOverrides').value.split('\n')) {
+    const l = line.trim();
+    if(!l) continue;
+    const idx = l.indexOf('=');
+    if(idx<1) throw new Error(`Override lines must be category=path — got "${l}"`);
+    out[l.slice(0,idx).trim()] = l.slice(idx+1).trim();
+  }
+  return out;
+}
+
+async function runScan(){
+  await saveConfig();
+  toast('Scanning…');
+  try{
+    const r = await api('/scan',{method:'POST'});
+    scanItems = r.items;
+    renderSummary(r);
+    renderChips();
+    renderResults();
+    document.getElementById('applyBtn').disabled=true;
+    document.getElementById('planCard').style.display='none';
+    toast(`Scan complete: ${r.total_files} files`);
+    loadHistory();
+  }catch(e){ toast('Scan failed: '+e.message); }
+}
+
+function renderSummary(r){
+  const bar=document.getElementById('summaryBar'); bar.style.display='flex';
+  const cats={};
+  r.items.forEach(i=>cats[i.category]=(cats[i.category]||0)+1);
+  bar.innerHTML=`
+    <div class="stat"><b>${r.total_files}</b><span>Files</span></div>
+    <div class="stat"><b>${Object.keys(cats).length}</b><span>Categories</span></div>
+    <div class="stat"><b>${fmtSize(r.items.reduce((s,i)=>s+(i.size_bytes||0),0))}</b><span>Total Size</span></div>
+    <div class="stat"><b>${r.roots_scanned.length}</b><span>Roots Scanned</span></div>`;
+}
+
+function renderChips(){
+  const cats=[...new Set(scanItems.map(i=>i.category))].sort();
+  const chips=document.getElementById('chips');
+  chips.innerHTML=['all',...cats].map(c=>`<span class="chip ${activeCat===c?'active':''}" onclick="activeCat='${c}';renderChips();renderResults()">${c.replace(/_/g,' ')}</span>`).join('');
+}
+
+function filteredItems(){
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  return scanItems.filter(i=>{
+    if(activeCat!=='all'&&i.category!==activeCat) return false;
+    if(q && !(i.source_path.toLowerCase().includes(q)||i.intent.includes(q))) return false;
+    return true;
+  });
+}
+
+let selected = new Set();
+function toggleAll(cb){
+  selected.clear();
+  if(cb.checked) filteredItems().forEach(i=>selected.add(i.source_path));
+  renderResults();
+}
+
+function renderResults(){
+  const items=filteredItems();
+  const tb=document.getElementById('resultsBody');
+  if(!items.length){ tb.innerHTML='<tr><td colspan="6" class="empty">No matching files.</td></tr>'; return; }
+  tb.innerHTML=items.map(i=>{
+    const c=CAT_COLORS[i.category]||'#666';
+    const conf=Math.round(i.confidence*100);
+    return `<tr>
+      <td><input type="checkbox" ${selected.has(i.source_path)?'checked':''} onchange="this.checked?selected.add('${escAttr(i.source_path)}'):selected.delete('${escAttr(i.source_path)}')"></td>
+      <td class="mono">${esc(i.source_path)}</td>
+      <td><span class="cat-tag" style="background:${c}22;color:${c};border:1px solid ${c}55">${i.category.replace(/_/g,' ')}</span>${i.details?.folder_unit?' <span class="cat-tag" style="background:#4a90d922;color:#4a90d9;border:1px solid #4a90d955">📁 unit</span>':''}${i.details?.rule_matched?` <span class="cat-tag" style="background:var(--accent)22;color:var(--accent);border:1px solid var(--accent)55">rule</span>`:''}${i.details?.llm_assisted?' 🤖':''}</td>
+      <td style="color:var(--muted)">${i.intent.replace(/_/g,' ')}</td>
+      <td><span class="conf-bar"><i style="width:${conf}%;background:${conf>=80?'var(--green)':conf>=60?'var(--yellow)':'var(--red)'}"></i></span>${conf}%</td>
+      <td class="mono" style="color:var(--muted)">${i.suggested_destination?esc(i.suggested_destination):'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function buildPlan(){
+  const sources = [...selected];
+  try{
+    plan = await api('/plan',{method:'POST',body:JSON.stringify(sources.length?sources:null)});
+    document.getElementById('planCard').style.display='block';
+    document.getElementById('planMeta').textContent=`${plan.operations.length} moves · ${fmtSize(plan.total_size_bytes)} · ${plan.conflicts} conflicts`;
+    document.getElementById('planBody').innerHTML=plan.operations.map(o=>`<tr>
+      <td class="${o.status==='skipped'?'status-skipped':'status-pending'}">${o.status}</td>
+      <td class="mono">${esc(o.source)}</td>
+      <td class="mono" style="color:var(--green)">${esc(o.destination)}</td></tr>`).join('');
+    document.getElementById('applyBtn').disabled=!plan.operations.some(o=>o.status==='pending');
+    toast(`Plan built: ${plan.operations.length} operations`);
+  }catch(e){ toast('Plan failed: '+e.message); }
+}
+
+async function applyPlan(){
+  if(config.dry_run!==false && !confirm('Dry run is ON — nothing will be moved.\nOK to preview?')) return;
+  if(config.dry_run===false && !confirm('⚠️ LIVE MODE — files WILL be moved!\nContinue?')) return;
+  try{
+    const r=await api('/apply',{method:'POST',body:JSON.stringify({force_dry_run:false})});
+    const s=r.summary;
+    toast(`${r.dry_run?'[DRY RUN] ':''}${s.statuses.done||0} moved, ${s.statuses.skipped||0} skipped, ${s.statuses.error||0} errors`,6000);
+    buildPlan();
+  }catch(e){ toast('Apply failed: '+e.message); }
+}
+
+async function undoLast(){
+  if(!confirm('Undo the last applied batch of moves?')) return;
+  try{ const r=await api('/undo',{method:'POST'}); toast(`Undone: ${r.undone} files${r.errors?.length?' ('+r.errors.length+' errors)':''}`,6000); runScan(); }
+  catch(e){ toast('Undo failed: '+e.message); }
+}
+
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escAttr(s){ return String(s??'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+loadConfig();
+</script>
+</body>
+</html>
