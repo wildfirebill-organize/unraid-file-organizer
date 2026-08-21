@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-21
+
+### Added
+
+- `ORGANIZER_OLLAMA_URL` environment variable sets the default Ollama URL for
+  LLM Assist at deploy time (CA template exposes it as a Variable; compose
+  passes it through). Falls back to the previous built-in default when unset.
+
+### Changed
+
+- Clearing the Ollama URL field in Settings now keeps the stored/env-provided
+  value instead of re-forcing `host.docker.internal`
+- docker-compose: removed the `extra_hosts` host-gateway workaround
+
 ## [1.4.1] - 2026-08-21
 
 ### Changed
@@ -124,7 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.2.0...v1.3.0
