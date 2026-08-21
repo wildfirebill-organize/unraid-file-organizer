@@ -30,6 +30,7 @@ class CustomRule(BaseModel):
     name: str = ""
     pattern: str
     match_on: str = "filename"  # filename | path
+    action: str = "move"  # move | keep (keep = never move, excluded from all planning)
     category: Optional[str] = None
     intent: Optional[str] = None
     destination: Optional[str] = None
@@ -52,7 +53,7 @@ class OrganizerConfig(BaseModel):
     llm_max_files: int = 100
     # User-defined rules that outrank built-in heuristics (first match wins)
     custom_rules: List[CustomRule] = Field(default_factory=list)
-    # Per-category destination overrides, e.g. {"media_audio": "/mnt/user/media/music"}
+    # Per-category destination overrides, e.g. {"media_audio": "/mnt/user/data/media/music"}
     category_destinations: Dict[str, str] = Field(default_factory=dict)
     # Scheduled automatic dry-run scans (never move files)
     schedule_enabled: bool = False
@@ -63,7 +64,7 @@ class OrganizerConfig(BaseModel):
     notify_url: str = ""
     # Media library mode (Plex/Jellyfin-style TV & movie routing)
     media_library_enabled: bool = False
-    media_library_root: str = "/mnt/user/media"
+    media_library_root: str = "/mnt/user/data/media"
 
 
 class HistoryEntry(BaseModel):

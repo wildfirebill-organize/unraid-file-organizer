@@ -25,7 +25,7 @@ Automatic file classification · Allow-list safety model · Dry-run first · Loc
 **Unraid File Organizer** is a self-hosted Docker web app that cleans up messy NAS shares.
 It scans the folders you allow, intelligently classifies every file — Windows installers,
 Android APKs, Linux binaries, OS ISOs, media, archives, documents — and moves each one to a
-sensible destination like `apps/windows/media/` or `isos/windows/`. Nothing is touched
+sensible destination like `data/apps/windows/media/` or `data/isos/windows/`. Nothing is touched
 without your explicit permission, nothing moves without a preview, and every move can be undone.
 
 Perfect for taming a downloads share that has accumulated years of random installers,
@@ -42,7 +42,7 @@ ISOs, APKs, and media files.
 | ↩️ | **One-click undo** | Full JSONL operation journal reverses any applied batch |
 | 🔁 | **Duplicate safety** | Never overwrites — renames `file (1).ext` or skips per policy |
 | 🤖 | **Optional local LLM assist** | Ollama re-classifies low-confidence files using embedded binary strings — private, no cloud |
-| 📏 | **Custom rules** | Regex rules (filename or path) that force category, intent, and destination — outranking built-in heuristics |
+| 📏 | **Custom rules** | Regex rules (filename or path) that force category, intent, and destination — or mark files **keep-in-place** — outranking built-in heuristics |
 | ⏰ | **Scheduled scans** | Automatic dry-run digests on a schedule — see what's ready to move without lifting a finger |
 | 🔔 | **Webhook notifications** | Digests and apply summaries to Discord, ntfy, or any JSON webhook |
 | 🧬 | **Duplicate detection** | Three-stage hash pipeline finds identical files across shares — quarantine the copies, keep the original |
@@ -87,23 +87,38 @@ Classification runs in tiers, fastest first:
 Every result carries a **confidence score**; you set the minimum threshold that must be met
 before a file is eligible to move.
 
-### Destination layout
+### Destination layout (TRaSH-Guides style, `/data` root)
 
 ```
-/mnt/user/
+/mnt/user/data/
+├── torrents/{movies,tv,music,books}/      # leave for your download clients
+├── usenet/{movies,tv,music,books}/
+├── media/
+│   ├── movies/                            # Movie Name (2010)/…
+│   ├── tv/                                # Show Name/Season 01/…
+│   ├── music/
+│   ├── books/
+│   └── photos/
 ├── apps/
-│   ├── windows/{media,network,utilities,development}/
-│   └── android/{media,network,utilities}/
-├── games/windows/
+│   ├── windows/{media,network,utilities,development,office,drivers}/
+│   ├── android/{media,network,utilities}/
+│   ├── linux/
+│   └── macos/
+├── games/{windows,android}/
 ├── isos/{windows,linux_debian,linux_arch,linux_redhat,macos,android}/
-├── media/{music,videos,photos}/
 ├── documents/
 ├── archives/
+├── code/
 └── quarantine/
 ```
 
+This matches the [TRaSH-Guides](https://trash-guides.info/File-and-Folder-Structure/)
+recommendation: Sonarr/Radarr/Plex/Jellyfin all mount `/data`, hardlinks stay
+on one filesystem, and `media/` is the only folder your media server sees.
+
 Customize destinations by editing `_suggest_location()` in
-[`app/core/file_classifier.py`](app/core/file_classifier.py).
+[`app/core/file_classifier.py`](app/core/file_classifier.py) or via the UI's
+Destination Overrides.
 
 ## 🤖 Optional: Local LLM Assist
 
@@ -166,7 +181,12 @@ Never. <code>/boot</code>, <code>/mnt/user/system</code>, <code>/mnt/cache/appda
 
 <details>
 <summary><b>Does it rename media like Sonarr/Radarr?</b></summary>
-Media Library Mode routes files into Plex/Jellyfin folder layouts (<code>TV Shows/Show/Season 01/</code>, <code>Movies/Movie (Year)/</code>) but keeps original filenames — it's an organizer, not a renamer.
+Media Library Mode routes files into Plex/Jellyfin folder layouts (<code>tv/Show/Season 01/</code>, <code>movies/Movie (Year)/</code>) but keeps original filenames — it's an organizer, not a renamer.
+</details>
+
+<details>
+<summary><b>I keep YouTube videos in channel folders — will they get moved?</b></summary>
+Not if you tell it once: add a custom rule with <b>Action → Keep in place</b>, match on <b>full path</b>, pattern <code>YouTubeChannels</code> (or whatever your parent folder is called). Kept files are excluded from plans, LLM assist, and media-library routing.
 </details>
 
 <details>

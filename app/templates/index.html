@@ -121,17 +121,37 @@
         <div id="rulesList"></div>
         <details style="margin-top:8px">
           <summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:600">+ Add rule</summary>
-          <div style="display:grid;gap:8px;margin-top:10px;">
-            <input type="text" id="rulePattern" placeholder="Regex — e.g. ^game_.*\.exe$" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
-            <div style="display:flex;gap:6px;">
-              <select id="ruleMatchOn" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;">
-                <option value="filename">filename</option>
-                <option value="path">full path</option>
-              </select>
-              <select id="ruleCategory" style="flex:2;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;"></select>
-              <select id="ruleIntent" style="flex:2;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:6px;"></select>
+          <div style="display:grid;gap:12px;margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);">
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Pattern (regex)</label>
+              <input type="text" id="rulePattern" placeholder="e.g. ^game_.*\.exe$" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
             </div>
-            <input type="text" id="ruleDest" placeholder="Destination override (optional) — /mnt/user/games/windows/" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Match against</label>
+              <select id="ruleMatchOn" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+                <option value="filename">File name only</option>
+                <option value="path">Full path</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Action</label>
+              <select id="ruleAction" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+                <option value="move">Move to destination</option>
+                <option value="keep">Keep in place (never move)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Force category (optional)</label>
+              <select id="ruleCategory" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;"></select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Force intent (optional)</label>
+              <select id="ruleIntent" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;"></select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Destination override (optional)</label>
+              <input type="text" id="ruleDest" placeholder="/mnt/user/data/games/windows/" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+            </div>
             <button class="btn" onclick="addRule()">Add Rule</button>
           </div>
         </details>
@@ -141,7 +161,7 @@
     <div class="card">
       <h2>🎯 Destination Overrides <span style="font-weight:400;text-transform:none">category = path per line</span></h2>
       <div class="body">
-        <textarea id="destOverrides" rows="5" placeholder="media_audio=/mnt/user/media/music&#10;os_image=/mnt/user/isos"
+        <textarea id="destOverrides" rows="5" placeholder="media_audio=/mnt/user/data/media/music&#10;os_image=/mnt/user/data/isos"
           style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:12px;"
           onchange="saveConfig()"></textarea>
         <small style="color:var(--muted)">Overrides built-in destinations for every file in that category.</small>
@@ -235,9 +255,9 @@
         <div id="mediaSettings" style="display:none; border:1px solid var(--border); border-radius:6px; padding:12px; background:var(--bg);">
           <div>
             <label>Library root</label>
-            <input type="text" id="mediaRoot" onchange="saveConfig()" placeholder="/mnt/user/media" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
+            <input type="text" id="mediaRoot" onchange="saveConfig()" placeholder="/mnt/user/data/media" style="width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;">
           </div>
-          <small style="color:var(--muted)">Show S01E02.mkv → <b>&lt;root&gt;/TV Shows/Show/Season 01/</b> · Movie (2010).mp4 → <b>&lt;root&gt;/Movies/Movie (2010)/</b></small>
+          <small style="color:var(--muted)">Show S01E02.mkv → <b>&lt;root&gt;/tv/Show/Season 01/</b> · Movie (2010).mp4 → <b>&lt;root&gt;/movies/Movie (2010)/</b></small>
         </div>
       </div>
     </div>
@@ -351,7 +371,7 @@ function applySettingsToForm(){
   document.getElementById('notifyType').value = config.notify_type || 'generic';
   document.getElementById('notifyUrl').value = config.notify_url || '';
   document.getElementById('mediaEnabled').checked = !!config.media_library_enabled;
-  document.getElementById('mediaRoot').value = config.media_library_root || '/mnt/user/media';
+  document.getElementById('mediaRoot').value = config.media_library_root || '/mnt/user/data/media';
   toggleLlm(); toggleSched(); toggleNotify(); toggleMedia();
   renderRules();
   loadOverridesEditor();
@@ -469,7 +489,7 @@ async function quarantineSelected(){
   const paths=[...document.querySelectorAll('.dup-check:checked')].map(c=>c.dataset.path);
   if(!paths.length) return toast('No duplicates selected');
   if(config.dry_run!==false && !confirm(`Dry run is ON — nothing will move.\n${paths.length} files would go to quarantine.`)) return;
-  if(config.dry_run===false && !confirm(`⚠️ Move ${paths.length} duplicate files to /mnt/user/quarantine/duplicates/?`)) return;
+  if(config.dry_run===false && !confirm(`⚠️ Move ${paths.length} duplicate files to /mnt/user/data/quarantine/duplicates/?`)) return;
   try{
     const r=await api('/duplicates/quarantine',{method:'POST',body:JSON.stringify({selected_paths:paths})});
     const s=r.summary;
@@ -526,7 +546,7 @@ async function saveConfig(){
   config.notify_type = document.getElementById('notifyType').value;
   config.notify_url = document.getElementById('notifyUrl').value.trim();
   config.media_library_enabled = document.getElementById('mediaEnabled').checked;
-  config.media_library_root = document.getElementById('mediaRoot').value.trim() || '/mnt/user/media';
+  config.media_library_root = document.getElementById('mediaRoot').value.trim() || '/mnt/user/data/media';
   try { config.category_destinations = parseOverrides(); }
   catch(e){ toast(e.message); return; }
   try{ config = await api('/config',{method:'PUT',body:JSON.stringify(config)}); toast('Settings saved'); updateModeBadge(); renderRules(); loadOverridesEditor(); }
@@ -560,9 +580,10 @@ function renderRules(){
   (config.custom_rules||[]).forEach((r,i)=>{
     const row = document.createElement('div'); row.className='path-row';
     const dest = r.destination ? ` → <span style="color:var(--green)">${esc(r.destination)}</span>` : '';
+    const act = r.action==='keep' ? '<span style="color:var(--yellow)">[keep in place]</span> ' : '';
     row.innerHTML = `<input type="checkbox" ${r.enabled?'checked':''} onchange="config.custom_rules[${i}].enabled=this.checked; saveConfig()">
       <div class="p-label"><div class="p-name mono" style="font-size:12px">${esc(r.pattern)}</div>
-      <div class="p-path">${esc(r.match_on)} → ${esc(r.category||'(keep)')} / ${esc(r.intent||'(keep)')}${dest}</div></div>
+      <div class="p-path">${act}${esc(r.match_on)} → ${esc(r.category||'(keep)')} / ${esc(r.intent||'(keep)')}${dest}</div></div>
       <button class="icon-btn" onclick="removeRule(${i})">✕</button>`;
     el.appendChild(row);
   });
@@ -576,6 +597,7 @@ async function addRule(){
   config.custom_rules.push({
     name: '', pattern,
     match_on: document.getElementById('ruleMatchOn').value,
+    action: document.getElementById('ruleAction').value || 'move',
     category: document.getElementById('ruleCategory').value || null,
     intent: document.getElementById('ruleIntent').value || null,
     destination: document.getElementById('ruleDest').value.trim() || null,
@@ -666,7 +688,7 @@ function renderResults(){
     return `<tr>
       <td><input type="checkbox" ${selected.has(i.source_path)?'checked':''} onchange="this.checked?selected.add('${escAttr(i.source_path)}'):selected.delete('${escAttr(i.source_path)}')"></td>
       <td class="mono">${esc(i.source_path)}</td>
-      <td><span class="cat-tag" style="background:${c}22;color:${c};border:1px solid ${c}55">${i.category.replace(/_/g,' ')}</span>${i.details?.folder_unit?' <span class="cat-tag" style="background:#4a90d922;color:#4a90d9;border:1px solid #4a90d955">📁 unit</span>':''}${i.details?.rule_matched?` <span class="cat-tag" style="background:var(--accent)22;color:var(--accent);border:1px solid var(--accent)55">rule</span>`:''}${i.details?.llm_assisted?' 🤖':''}</td>
+      <td><span class="cat-tag" style="background:${c}22;color:${c};border:1px solid ${c}55">${i.category.replace(/_/g,' ')}</span>${i.details?.folder_unit?' <span class="cat-tag" style="background:#4a90d922;color:#4a90d9;border:1px solid #4a90d955">📁 unit</span>':''}${i.details?.rule_keep?' <span class="cat-tag" style="background:var(--yellow)22;color:var(--yellow);border:1px solid var(--yellow)55">keep</span>':''}${i.details?.rule_matched&&!i.details?.rule_keep?` <span class="cat-tag" style="background:var(--accent)22;color:var(--accent);border:1px solid var(--accent)55">rule</span>`:''}${i.details?.llm_assisted?' 🤖':''}</td>
       <td style="color:var(--muted)">${i.intent.replace(/_/g,' ')}</td>
       <td><span class="conf-bar"><i style="width:${conf}%;background:${conf>=80?'var(--green)':conf>=60?'var(--yellow)':'var(--red)'}"></i></span>${conf}%</td>
       <td class="mono" style="color:var(--muted)">${i.suggested_destination?esc(i.suggested_destination):'—'}</td>

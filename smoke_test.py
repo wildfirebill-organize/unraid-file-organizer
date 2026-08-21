@@ -223,17 +223,17 @@ units = [i for i in r3.items if i.details.get("folder_unit")]
 assert len(units) == 1, f"expected 1 folder unit, got {len(units)}"
 u = units[0]
 assert u.filename == "EldenRingPortable" and u.intent == "game", f"unit misclassified: {u.filename}/{u.intent}"
-assert u.suggested_destination == "/mnt/user/games/windows/", f"unit dest wrong: {u.suggested_destination}"
+assert u.suggested_destination == "/mnt/user/data/games/windows/", f"unit dest wrong: {u.suggested_destination}"
 plan3 = OrganizerService(cfg2).build_plan(r3.items)
 unit_op = next(o for o in plan3.operations if o.source == str(game_dir))
-assert os.path.normpath(unit_op.destination) == os.path.normpath("/mnt/user/games/windows/EldenRingPortable"), f"planner dest wrong: {unit_op.destination}"
+assert os.path.normpath(unit_op.destination) == os.path.normpath("/mnt/user/data/games/windows/EldenRingPortable"), f"planner dest wrong: {unit_op.destination}"
 inner = [i for i in r3.items if i.parent_dir.startswith(str(game_dir))]
 assert not inner, "scanner descended into folder unit"
 print(f"[OK ] Folder unit: '{u.filename}' -> {u.suggested_destination} (no descent into it)")
 
 # Media library parsing + routing
 c2.media_library_enabled = True
-c2.media_library_root = "/mnt/user/media"
+c2.media_library_root = "/mnt/user/data/media"
 cfg2.save()
 (tmp / "downloads" / "Breaking Bad S01E02.mkv").write_bytes(b"\x00" * 20)
 (tmp / "downloads" / "Inception (2010).mp4").write_bytes(b"\x00" * 20)
@@ -242,11 +242,11 @@ by_name4 = {i.filename: i for i in r4.items}
 ep = by_name4["Breaking Bad S01E02.mkv"]
 mv = by_name4["Inception (2010).mp4"]
 assert ep.details.get("media_parsed") == "episode"
-assert ep.suggested_destination == "/mnt/user/media/TV Shows/Breaking Bad/Season 01/", f"episode dest wrong: {ep.suggested_destination}"
+assert ep.suggested_destination == "/mnt/user/data/media/tv/Breaking Bad/Season 01/", f"episode dest wrong: {ep.suggested_destination}"
 assert mv.details.get("media_parsed") == "movie"
-assert mv.suggested_destination == "/mnt/user/media/Movies/Inception (2010)/", f"movie dest wrong: {mv.suggested_destination}"
+assert mv.suggested_destination == "/mnt/user/data/media/movies/Inception (2010)/", f"movie dest wrong: {mv.suggested_destination}"
 assert parse_media("notes.txt") is None and parse_media("random_video.mkv") is None
-print("[OK ] Media library: episode -> TV Shows/.../Season 01/, movie -> Movies/Title (Year)/")
+print("[OK ] Media library: episode -> tv/.../Season 01/, movie -> movies/Title (Year)/")
 
 # Duplicates: identical content in two files
 dup_a = tmp / "downloads" / "dup_original.dat"
@@ -339,13 +339,40 @@ for fname, expect, extra in media_cases:
 
 multi = parse_media("Show.Name.S01E02-E03.720p.mkv")
 ep_dest = destination_for(multi, c2)
-assert ep_dest == "/mnt/user/media/TV Shows/Show Name/Season 01/", f"multi-ep dest wrong: {ep_dest}"
+assert ep_dest == "/mnt/user/data/media/tv/Show Name/Season 01/", f"multi-ep dest wrong: {ep_dest}"
 
 # Guard rails: no false positives on tricky names
 assert parse_media("Blade Runner - 2049 (2017).mkv")["type"] == "movie"
 assert parse_media("random_video.mkv") is None
 assert parse_media("2020.720p.mkv") is None or True  # ambiguous — must not crash either way
 print("[OK ] Media v1.4: multi-ep ranges, anime dash numbering, [group] prefixes, keyword eps, loose-year movies")
+
+# ---------- keep-in-place rules (YouTube channel folders) ----------
+c2.custom_rules.append(CustomRule(
+    name="yt", pattern=r"YouTubeChannels", match_on="path", action="keep",
+))
+cfg2.save()
+yt_dir = tmp / "downloads" / "YouTubeChannels" / "MKBHD"
+yt_dir.mkdir(parents=True, exist_ok=True)
+(yt_dir / "Cool Show S01E02.mkv").write_bytes(b"\x00" * 20)
+
+r7 = ScannerService(cfg2).scan()
+kept = [i for i in r7.items if i.details.get("rule_keep")]
+assert len(kept) == 1 and kept[0].suggested_destination is None, \
+    f"keep failed: {[(i.filename, i.suggested_destination) for i in kept]}"
+kept_file = str(yt_dir / "Cool Show S01E02.mkv")
+plan7 = OrganizerService(cfg2).build_plan(r7.items)
+assert all(o.source != kept_file for o in plan7.operations), "kept file entered the plan"
+
+# precedence control: identical file WITHOUT the keep rule routes into tv/
+c2.custom_rules.pop()
+cfg2.save()
+r8 = ScannerService(cfg2).scan()
+same = next(i for i in r8.items if i.source_path == kept_file)
+assert same.details.get("media_parsed") == "episode" \
+    and same.suggested_destination.startswith("/mnt/user/data/media/tv/"), \
+    f"precedence control failed: {same.suggested_destination}"
+print("[OK ] Keep-in-place rule: channel video untouched; without the rule it routes to tv/")
 
 print(f"\n{'ALL CHECKS PASSED' if fails == 0 else f'{fails} CHECKS FAILED'}")
 sys.exit(1 if fails else 0)

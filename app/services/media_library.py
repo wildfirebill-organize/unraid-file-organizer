@@ -1,14 +1,15 @@
 """Media library mode — routes TV episodes and movies into Plex/Jellyfin-style paths.
 
-    Show Name S01E02.mkv                    → <root>/TV Shows/Show Name/Season 01/
+    Show Name S01E02.mkv                    → <root>/tv/Show Name/Season 01/
     Show Name S01E02-E03.mkv                → same (multi-episode, routed by first ep)
-    [Group] Cowboy Bebop - 05 [1080p].mkv   → <root>/TV Shows/Cowboy Bebop/Season 01/
-    Naruto Shippuden Episode 220.mp4        → <root>/TV Shows/Naruto Shippuden/Season 01/
-    Movie Name (2010).mp4                   → <root>/Movies/Movie Name (2010)/
-    Movie.Name.2010.1080p.x264.mkv          → <root>/Movies/Movie Name (2010)/
+    [Group] Cowboy Bebop - 05 [1080p].mkv   → <root>/tv/Cowboy Bebop/Season 01/
+    Naruto Shippuden Episode 220.mp4        → <root>/tv/Naruto Shippuden/Season 01/
+    Movie Name (2010).mp4                   → <root>/movies/Movie Name (2010)/
+    Movie.Name.2010.1080p.x264.mkv          → <root>/movies/Movie Name (2010)/
 
-Pure parsing helpers; the scanner applies results only when the mode is enabled
-and no custom rule already claimed the file.
+Default root is /mnt/user/data/media (TRaSH-Guides layout). Pure parsing
+helpers; the scanner applies results only when the mode is enabled and no
+custom rule already claimed the file.
 """
 
 import os
@@ -169,8 +170,9 @@ def parse_media(filename: str) -> Optional[Dict[str, Any]]:
 
 
 def destination_for(parsed: Dict[str, Any], cfg) -> str:
+    """TRaSH-Guides-style lowercase layout: <root>/tv, <root>/movies."""
     root = cfg.media_library_root.rstrip("/\\")
     if parsed["type"] == "episode":
-        return f"{root}/TV Shows/{parsed['title']}/Season {parsed['season']:02d}/"
+        return f"{root}/tv/{parsed['title']}/Season {parsed['season']:02d}/"
     year = f" ({parsed['year']})" if parsed.get("year") else ""
-    return f"{root}/Movies/{parsed['title']}{year}/"
+    return f"{root}/movies/{parsed['title']}{year}/"

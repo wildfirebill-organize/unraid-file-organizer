@@ -75,7 +75,8 @@ class LLMClassifier:
         """Upgrade low-confidence items in place. Returns stats for logging/UI."""
         targets = [
             i for i in items
-            if i.confidence < cfg.min_confidence or i.category == FileCategory.UNKNOWN.value
+            if (i.confidence < cfg.min_confidence or i.category == FileCategory.UNKNOWN.value)
+            and not i.details.get("rule_matched")
         ]
         targets = targets[: max(0, cfg.llm_max_files)]
         stats = {"candidates": len(targets), "upgraded": 0, "failed": 0}

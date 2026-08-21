@@ -5,7 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.5] - 2026-08-21
+
+### Added
+
+- **Keep-in-place rule action** — custom rules can now mark matching files as
+  never-move (e.g. YouTube videos organized under channel folders). Kept files
+  are excluded from move plans, LLM assist, and media-library routing, and get
+  a `keep` badge in scan results.
+
+### Changed
+
+- **TRaSH-Guides destination layout** — all suggested destinations now live
+  under a `/mnt/user/data` root (`data/media/{movies,tv,music}`,
+  `data/apps/…`, `data/games/…`, `data/isos/…`, `data/quarantine/`),
+  matching the [TRaSH-Guides](https://trash-guides.info/File-and-Folder-Structure/)
+  recommendation for *arr stacks
+- Media library mode defaults to `/mnt/user/data/media` with lowercase
+  `tv/` and `movies/` folders
+- Duplicate quarantine moved to `/mnt/user/data/quarantine/duplicates`
+
+### Migration note
+
+Existing installs with a saved `config.json`: update **Media library root**
+in Settings (or set `media_library_root` in the file) to
+`/mnt/user/data/media`, since saved values are preserved across upgrades.
 
 ## [1.4.4] - 2026-08-21
 
@@ -163,7 +187,8 @@ image.
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.4...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.5...HEAD
+[1.4.5]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.4...v1.4.5
 [1.4.4]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.3...v1.4.4
 [1.4.3]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...v1.4.2

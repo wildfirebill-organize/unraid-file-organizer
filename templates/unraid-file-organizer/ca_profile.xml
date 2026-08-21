@@ -3,7 +3,7 @@
   <Profile>
     Smart, safe, self-hosted file organization for your Unraid server.
 
-    Unraid File Organizer scans the folders you allow, intelligently classifies every file — Windows installers, Android APKs, OS ISOs, media, archives, documents — and moves each one to a sensible destination like apps/windows/media/ or isos/windows/. Nothing moves without a preview, and every move can be undone.
+    Unraid File Organizer scans the folders you allow, intelligently classifies every file — Windows installers, Android APKs, OS ISOs, media, archives, documents — and moves each one to a sensible destination like data/apps/windows/media/ or data/isos/windows/. Nothing moves without a preview, and every move can be undone.
 
     FEATURES
     • Checkbox allow-list locations — unchecked folders are never scanned

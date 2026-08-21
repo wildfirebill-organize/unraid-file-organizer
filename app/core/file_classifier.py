@@ -430,7 +430,7 @@ class SmartFileClassifier:
             intent=FileIntent.OS_COMPONENT,
             confidence=0.95,
             details=details,
-            suggested_location=f"/mnt/user/isos/{os_type}/"
+            suggested_location=f"/mnt/user/data/isos/{os_type}/"
         )
 
     def _extract_strings(self, data: bytes, min_len: int = 4) -> List[str]:
@@ -493,22 +493,36 @@ class SmartFileClassifier:
         return FileIntent.DATA_FILE
 
     def _suggest_location(self, category: FileCategory, intent: FileIntent) -> Optional[str]:
-        """Suggest a location for the file based on category and intent"""
-        base = "/mnt/user"
+        """Suggest a location following TRaSH-Guides-style /data root layout."""
+        base = "/mnt/user/data"
 
         suggestions = {
             FileCategory.EXECUTABLE_WINDOWS: {
                 FileIntent.MUSIC_PLAYER: f"{base}/apps/windows/media/",
+                FileIntent.MEDIA_PLAYER: f"{base}/apps/windows/media/",
                 FileIntent.NETWORK_TOOL: f"{base}/apps/windows/network/",
                 FileIntent.SYSTEM_UTILITY: f"{base}/apps/windows/utilities/",
-                FileIntent.GAME: f"{base}/games/windows/",
+                FileIntent.ARCHIVE_TOOL: f"{base}/apps/windows/utilities/",
+                FileIntent.OFFICE_APP: f"{base}/apps/windows/office/",
                 FileIntent.DEVELOPMENT_TOOL: f"{base}/apps/windows/development/",
+                FileIntent.DRIVER: f"{base}/apps/windows/drivers/",
+                FileIntent.GAME: f"{base}/games/windows/",
                 FileIntent.MALWARE_SUSPECT: f"{base}/quarantine/",
             },
             FileCategory.EXECUTABLE_ANDROID: {
                 FileIntent.MUSIC_PLAYER: f"{base}/apps/android/media/",
+                FileIntent.MEDIA_PLAYER: f"{base}/apps/android/media/",
                 FileIntent.NETWORK_TOOL: f"{base}/apps/android/network/",
                 FileIntent.SYSTEM_UTILITY: f"{base}/apps/android/utilities/",
+                FileIntent.GAME: f"{base}/games/android/",
+            },
+            FileCategory.EXECUTABLE_LINUX: {
+                FileIntent.DATA_FILE: f"{base}/apps/linux/",
+                FileIntent.UNKNOWN: f"{base}/apps/linux/",
+            },
+            FileCategory.EXECUTABLE_MACOS: {
+                FileIntent.DATA_FILE: f"{base}/apps/macos/",
+                FileIntent.UNKNOWN: f"{base}/apps/macos/",
             },
             FileCategory.OS_IMAGE: {
                 FileIntent.OS_COMPONENT: f"{base}/isos/",
@@ -517,7 +531,7 @@ class SmartFileClassifier:
                 FileIntent.DATA_FILE: f"{base}/media/music/",
             },
             FileCategory.MEDIA_VIDEO: {
-                FileIntent.DATA_FILE: f"{base}/media/videos/",
+                FileIntent.DATA_FILE: f"{base}/media/movies/",
             },
             FileCategory.MEDIA_IMAGE: {
                 FileIntent.DATA_FILE: f"{base}/media/photos/",
@@ -527,6 +541,7 @@ class SmartFileClassifier:
             },
             FileCategory.ARCHIVE: {
                 FileIntent.ARCHIVE_TOOL: f"{base}/archives/",
+                FileIntent.DATA_FILE: f"{base}/archives/",
             },
             FileCategory.CODE_SOURCE: {
                 FileIntent.DATA_FILE: f"{base}/code/",

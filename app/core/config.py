@@ -42,9 +42,9 @@ DEFAULT_DISALLOW = [
 
 DEFAULT_MANAGED = [
     ManagedPath(path="/mnt/user/downloads", label="Downloads", enabled=False),
-    ManagedPath(path="/mnt/user/isos", label="ISOs", enabled=False),
-    ManagedPath(path="/mnt/user/media", label="Media", enabled=False),
-    ManagedPath(path="/mnt/user/apps", label="Apps/Installers", enabled=False),
+    ManagedPath(path="/mnt/user/data/isos", label="ISOs", enabled=False),
+    ManagedPath(path="/mnt/user/data/media", label="Media", enabled=False),
+    ManagedPath(path="/mnt/user/data/apps", label="Apps/Installers", enabled=False),
 ]
 
 
@@ -108,6 +108,8 @@ class ConfigManager:
                 raise ValueError(f"Invalid regex in rule '{label}': {e}")
             if rule.match_on not in ("filename", "path"):
                 raise ValueError(f"Rule '{label}': match_on must be 'filename' or 'path'")
+            if rule.action not in ("move", "keep"):
+                raise ValueError(f"Rule '{label}': action must be 'move' or 'keep'")
             if rule.category and rule.category not in valid_cats:
                 raise ValueError(f"Rule '{label}': unknown category '{rule.category}'")
             if rule.intent and rule.intent not in valid_intents:

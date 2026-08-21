@@ -167,6 +167,14 @@ class ScannerService:
             if not matched:
                 continue
 
+            if getattr(rule, "action", "move") == "keep":
+                # Keep-in-place: excluded from planning, media routing and LLM rerouting
+                item.suggested_destination = None
+                item.confidence = max(item.confidence, 0.95)
+                item.details["rule_matched"] = rule.name or rule.pattern
+                item.details["rule_keep"] = True
+                return
+
             if rule.category:
                 item.category = rule.category
                 item.suggested_destination = self.classifier._suggest_location(

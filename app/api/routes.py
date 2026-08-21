@@ -179,7 +179,7 @@ async def quarantine_duplicates(request: QuarantineRequest):
     from app.models.models import MoveOperation, PlanResponse
 
     cfg = config_manager.load()
-    dest_dir = "/mnt/user/quarantine/duplicates"
+    dest_dir = "/mnt/user/data/quarantine/duplicates"
     ops: List[MoveOperation] = []
     for p in request.selected_paths:
         if not _os.path.exists(p):
