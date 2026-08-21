@@ -1,8 +1,14 @@
 """Data models for the Unraid organizer"""
 
+import os
+
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+
+
+def _default_ollama_url() -> str:
+    return os.environ.get("ORGANIZER_OLLAMA_URL") or "http://host.docker.internal:11434"
 
 
 class ManagedPath(BaseModel):
@@ -41,7 +47,7 @@ class OrganizerConfig(BaseModel):
     max_files_per_scan: int = 50000
     # Optional LLM assist (local Ollama). Only used for low-confidence files.
     llm_enabled: bool = False
-    ollama_url: str = "http://host.docker.internal:11434"
+    ollama_url: str = Field(default_factory=_default_ollama_url)
     ollama_model: str = "qwen2.5:3b"
     llm_max_files: int = 100
     # User-defined rules that outrank built-in heuristics (first match wins)

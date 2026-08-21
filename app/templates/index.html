@@ -516,7 +516,7 @@ async function saveConfig(){
   config.min_confidence = parseInt(document.getElementById('minConfidence').value)/100;
   config.duplicate_policy = document.getElementById('dupPolicy').value;
   config.llm_enabled = document.getElementById('llmEnabled').checked;
-  config.ollama_url = document.getElementById('ollamaUrl').value.trim() || 'http://host.docker.internal:11434';
+  config.ollama_url = document.getElementById('ollamaUrl').value.trim() || config.ollama_url || '';
   config.ollama_model = document.getElementById('ollamaModel').value.trim() || 'qwen2.5:3b';
   config.llm_max_files = parseInt(document.getElementById('llmMaxFiles').value) || 100;
   config.schedule_enabled = document.getElementById('schedEnabled').checked;

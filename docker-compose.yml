@@ -4,11 +4,12 @@ services:
     image: unraid-organizer:latest
     container_name: unraid-organizer
     restart: unless-stopped
-    # Lets the default Ollama URL (host.docker.internal) reach a container on the host
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "8787:8787"
+    environment:
+      # Default Ollama URL for LLM Assist (also configurable later in the web UI).
+      # Use your server's LAN IP, or a container name if both share a network.
+      - ORGANIZER_OLLAMA_URL=${ORGANIZER_OLLAMA_URL:-}
     volumes:
       # All shares you may want to organize — mount the whole user share tree
       - /mnt/user:/mnt/user

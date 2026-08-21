@@ -118,6 +118,10 @@ docker exec ollama ollama pull qwen2.5:3b
 
 Then enable **Settings → 🤖 LLM Assist** in the organizer UI and hit *Test connection*.
 
+Tip: set the default server-wide with the `ORGANIZER_OLLAMA_URL` environment
+variable (e.g. `http://192.168.1.10:11434`) — the CA template exposes it as a
+variable, and docker-compose passes it through.
+
 - Only low-confidence files are sent, capped per scan — scans stay fast
 - Model replies are validated against known categories; unsure answers are ignored
 - Ollama down? Scans proceed with deterministic results
