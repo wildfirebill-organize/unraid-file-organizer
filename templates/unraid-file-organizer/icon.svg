@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7a45"/>
+      <stop offset="1" stop-color="#e2492a"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#23272c"/>
+      <stop offset="1" stop-color="#15171a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="256" height="256" rx="52" fill="url(#bg)"/>
+
+  <!-- back folder -->
+  <g opacity="0.6">
+    <path d="M42 58h58l15 17H42a9 9 0 0 1-9-9V67a9 9 0 0 1 9-9z" fill="#5b636d"/>
+    <rect x="33" y="72" width="158" height="34" rx="9" fill="#5b636d"/>
+  </g>
+
+  <!-- mid folder -->
+  <g opacity="0.85">
+    <path d="M50 86h58l15 17H50a9 9 0 0 1-9-9v-8a9 9 0 0 1 9-9z" fill="#7a828c"/>
+    <rect x="41" y="100" width="166" height="34" rx="9" fill="#7a828c"/>
+  </g>
+
+  <!-- front folder -->
+  <path d="M58 118h60l16 17h64a10 10 0 0 1 10 10v56a10 10 0 0 1-10 10H58a10 10 0 0 1-10-10V128a10 10 0 0 1 10-10z" fill="url(#fg)"/>
+
+  <!-- check -->
+  <polyline points="94,168 118,192 166,140" fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

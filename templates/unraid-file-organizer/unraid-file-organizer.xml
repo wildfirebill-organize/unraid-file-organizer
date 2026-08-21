@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Container>
+  <Name>Unraid File Organizer</Name>
+  <Repository>ghcr.io/wildfirebill-organize/unraid-file-organizer:latest</Repository>
+  <Registry>https://ghcr.io/wildfirebill-organize/unraid-file-organizer</Registry>
+  <Branch>
+    <Name>latest</Name>
+    <Tag>latest</Tag>
+  </Branch>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/wildfirebill-organize/unraid-file-organizer/discussions</Support>
+  <Project>https://github.com/wildfirebill-organize/unraid-file-organizer</Project>
+  <Overview>
+    Smart, safe, self-hosted file organization for your Unraid server.
+
+    Unraid File Organizer scans the folders you allow, intelligently classifies every file — Windows installers, Android APKs, OS ISOs, media, archives, documents — and moves each one to a sensible destination like apps/windows/media/ or isos/windows/. Nothing moves without a preview, and every move can be undone.
+
+    FEATURES
+    • Checkbox allow-list locations — unchecked folders are never scanned
+    • Never-touch list; /boot, system shares and appdata are hard-forbidden
+    • Smart classification incl. PE/APK binary analysis and ISO OS detection
+    • Custom regex rules and per-category destination overrides
+    • Dry-run by default with one-click undo
+    • Optional local LLM assist (Ollama) for low-confidence files
+    • Scheduled dry-run digests via Discord / ntfy / generic webhooks
+    • Duplicate detection with journalled quarantine
+    • Folder-level units: game/app directories move whole
+    • Media library mode: Plex/Jellyfin-style TV &amp; movie routing
+
+    GETTING STARTED
+    Open the WebUI, add your messy folder under Allowed Locations, tick its checkbox, Scan, Build Plan, review, then Apply (keep Dry Run on until you trust it).
+
+    This container needs access to your shares: it mounts /mnt/user read-write.
+  </Overview>
+  <Category>Tools:Utilities</Category>
+  <WebUI>http://[IP]:[PORT:8787]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/wildfirebill-organize/unraid-file-organizer/main/templates/unraid-file-organizer/unraid-file-organizer.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/wildfirebill-organize/unraid-file-organizer/main/templates/unraid-file-organizer/icon.svg</Icon>
+  <ExtraParams>--add-host=host.docker.internal:host-gateway</ExtraParams>
+  <PostArgs></PostArgs>
+  <CPUset></CPUset>
+  <TTY>false</TTY>
+  <Environment></Environment>
+  <Labels></Labels>
+
+  <Config Name="Web UI Port" Target="8787" Default="8787" Mode="tcp" Description="Port the organizer web interface listens on" Type="Port" Display="always" Required="true" Mask="false">8787</Config>
+  <Config Name="User Shares" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Unraid user share tree the organizer may scan and reorganize (restricted further by Allowed Locations in the UI)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Appdata Config" Target="/config" Default="/mnt/user/appdata/unraid-organizer" Mode="rw" Description="Persistent location for settings, operation journal, duplicate reports and scan history" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/unraid-organizer</Config>
+</Container>

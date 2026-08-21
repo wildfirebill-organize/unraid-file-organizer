@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>
+    Smart, safe, self-hosted file organization for your Unraid server.
+
+    Unraid File Organizer scans the folders you allow, intelligently classifies every file — Windows installers, Android APKs, OS ISOs, media, archives, documents — and moves each one to a sensible destination like apps/windows/media/ or isos/windows/. Nothing moves without a preview, and every move can be undone.
+
+    FEATURES
+    • Checkbox allow-list locations — unchecked folders are never scanned
+    • Never-touch list; /boot, system shares and appdata are hard-forbidden
+    • Smart classification incl. PE/APK binary analysis and ISO OS detection
+    • Custom regex rules and per-category destination overrides
+    • Dry-run by default with one-click undo
+    • Optional local LLM assist (Ollama) for low-confidence files
+    • Scheduled dry-run digests via Discord / ntfy / generic webhooks
+    • Duplicate detection with journalled quarantine
+    • Folder-level units: game/app directories move whole
+    • Media library mode: Plex/Jellyfin-style TV &amp; movie routing
+
+    GETTING STARTED
+    Open the WebUI, add your messy folder under Allowed Locations, tick its checkbox, Scan, Build Plan, review, then Apply (keep Dry Run on until you trust it).
+  </Profile>
+  <Icon>https://raw.githubusercontent.com/wildfirebill-organize/unraid-file-organizer/main/templates/unraid-file-organizer/icon.svg</Icon>
+  <WebPage>https://github.com/wildfirebill-organize/unraid-file-organizer/tree/main/templates/unraid-file-organizer</WebPage>
+</CommunityApplications>
