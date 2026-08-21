@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-08-21
+
+### Added
+
+- **Version visibility** — `GET /api/version` reports app version, uid, and
+  whether `/config` is writable; the UI header shows a version badge that turns
+  red with "config READ-ONLY" when saves cannot work; startup log line includes
+  the same diagnostics.
+- Entrypoint warns loudly at startup if `/config` remains unwritable after chown.
+
+Use this release to confirm you are actually running the fixed image: if the
+header badge does not say v1.4.4, the container was not recreated from the new
+image.
+
 ## [1.4.3] - 2026-08-21
 
 ### Fixed
@@ -149,7 +163,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.4...HEAD
+[1.4.4]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.3...v1.4.4
 [1.4.3]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.0...v1.4.1

@@ -83,6 +83,7 @@
 
 <header>
   <h1>🗂️ Unraid File Organizer</h1>
+  <span id="verBadge" class="badge" style="border:1px solid var(--border);color:var(--muted)">v…</span>
   <span id="modeBadge" class="badge dry">DRY RUN</span>
   <div class="spacer"></div>
   <button class="btn secondary" onclick="undoLast()">↩ Undo Last Apply</button>
@@ -708,7 +709,18 @@ async function undoLast(){
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escAttr(s){ return String(s??'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 
+async function loadVersion(){
+  try{
+    const v = await api('/version');
+    const el = document.getElementById('verBadge');
+    el.textContent = `v${v.version}` + (v.config_writable ? '' : ' · config READ-ONLY');
+    el.style.color = v.config_writable ? 'var(--green)' : 'var(--red)';
+    el.style.borderColor = v.config_writable ? 'var(--border)' : 'var(--red)';
+  }catch(e){}
+}
+
 loadConfig();
+loadVersion();
 </script>
 </body>
 </html>

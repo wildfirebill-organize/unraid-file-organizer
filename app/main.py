@@ -11,20 +11,38 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router as api_router, scheduler
-
+from app.version import VERSION
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("organizer")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import os
     task = asyncio.create_task(scheduler.run())
-    logger.info("Background scheduler task started")
+    writable = os.access(os.path.dirname(os.environ.get("ORGANIZER_CONFIG", "/config/config.json")), os.W_OK)
+    logger.info(
+        "Unraid File Organizer v%s starting | uid=%d | /config writable=%s",
+        VERSION, os.geteuid(), writable,
+    )
     yield
     task.cancel()
 
 
-app = FastAPI(title="Unraid File Organizer", version="1.4.3", lifespan=lifespan)
+app = FastAPI(title="Unraid File Organizer", version=VERSION, lifespan=lifespan)
+
+
+@app.get("/api/version")
+async def version_info():
+    import os
+    config_dir = os.environ.get("ORGANIZER_CONFIG", "/config/config.json")
+    parent = os.path.dirname(config_dir)
+    return {
+        "version": VERSION,
+        "uid": os.geteuid(),
+        "config_path": config_dir,
+        "config_writable": os.access(parent, os.W_OK),
+    }
 
 app.include_router(api_router)
 
