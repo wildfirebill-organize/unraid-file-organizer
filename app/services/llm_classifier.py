@@ -27,12 +27,13 @@ Classify the given file into exactly one category and one intent.
 
 Valid categories:
 executable_windows, executable_linux, executable_macos, executable_android,
-os_image, archive, document, media_audio, media_video, media_image,
-code_source, config, database, log, temp, unknown
+os_image, game_rom, homebrew, archive, document, media_audio, media_video,
+media_image, code_source, config, database, log, temp, unknown
 
 Valid intents:
 music_player, network_tool, system_utility, game, development_tool,
-office_app, media_player, archive_tool, os_component, driver, data_file, unknown
+office_app, media_player, archive_tool, os_component, driver, emulator,
+homebrew, data_file, unknown
 
 Reply with ONLY a JSON object, no other text:
 {"category": "<category>", "intent": "<intent>", "confidence": <0.0-1.0>}

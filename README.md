@@ -43,6 +43,7 @@ ISOs, APKs, and media files.
 | 🔁 | **Duplicate safety** | Never overwrites — renames `file (1).ext` or skips per policy |
 | 🤖 | **Optional local LLM assist** | Ollama re-classifies low-confidence files using embedded binary strings — private, no cloud |
 | 📏 | **Custom rules** | Regex rules (filename or path) that force category, intent, and destination — or mark files **keep-in-place** — outranking built-in heuristics |
+| 🎮 | **ROM & console detection** | 40+ console extensions (SNES, NES, N64, GBA, DS, 3DS, Switch, PSX/PSP, Dreamcast, Atari, Neo Geo…) sorted into `roms/<console>/`; homebrew (`*.3dsx`, `*.dol`, `*.vpk`) and emulators get their own homes |
 | ⏰ | **Scheduled scans** | Automatic dry-run digests on a schedule — see what's ready to move without lifting a finger |
 | 🔔 | **Webhook notifications** | Digests and apply summaries to Discord, ntfy, or any JSON webhook |
 | 🧬 | **Duplicate detection** | Three-stage hash pipeline finds identical files across shares — quarantine the copies, keep the original |
@@ -105,6 +106,10 @@ before a file is eligible to move.
 │   ├── linux/
 │   └── macos/
 ├── games/{windows,android}/
+├── roms/{snes,nes,n64,gb,gbc,gba,nds,3ds,switch,psx,ps2,psp,dreamcast,saturn,
+│          genesis,sms,pcengine,atari2600,atari7800,jaguar,neogeo,xbox,…}/
+├── homebrew/{3ds,wii,psvita,…}/
+├── emulators/{windows,android,linux}/
 ├── isos/{windows,linux_debian,linux_arch,linux_redhat,macos,android}/
 ├── documents/
 ├── archives/

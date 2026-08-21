@@ -336,15 +336,16 @@ let activeCat = 'all';
 
 const CAT_COLORS = {
   executable_windows:'#e05252', executable_android:'#4a90d9', executable_linux:'#48b568',
-  executable_macos:'#9aa3ad', os_image:'#e0b34a', archive:'#b07ad9', document:'#4ac0d9',
+  executable_macos:'#9aa3ad', os_image:'#e0b34a', game_rom:'#6ab04c', homebrew:'#e84393',
+  archive:'#b07ad9', document:'#4ac0d9',
   media_audio:'#48b568', media_video:'#e08a4a', media_image:'#d94a9a', code_source:'#4a90d9',
   unknown:'#666'
 };
 const RULE_CATS = ['executable_windows','executable_linux','executable_macos','executable_android',
-  'os_image','archive','document','media_audio','media_video','media_image','code_source',
+  'os_image','game_rom','homebrew','archive','document','media_audio','media_video','media_image','code_source',
   'config','database','log','temp'];
 const RULE_INTENTS = ['music_player','network_tool','system_utility','game','development_tool',
-  'office_app','media_player','archive_tool','os_component','driver','data_file'];
+  'office_app','media_player','archive_tool','os_component','driver','emulator','homebrew','data_file'];
 
 function toast(msg, ms=3500){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',ms); }
 async function api(path, opts={}){ const r = await fetch('/api'+path,{headers:{'Content-Type':'application/json'},...opts}); if(!r.ok){ const e=await r.json().catch(()=>({detail:r.statusText})); throw new Error(e.detail||r.statusText);} return r.json(); }
@@ -688,7 +689,7 @@ function renderResults(){
     return `<tr>
       <td><input type="checkbox" ${selected.has(i.source_path)?'checked':''} onchange="this.checked?selected.add('${escAttr(i.source_path)}'):selected.delete('${escAttr(i.source_path)}')"></td>
       <td class="mono">${esc(i.source_path)}</td>
-      <td><span class="cat-tag" style="background:${c}22;color:${c};border:1px solid ${c}55">${i.category.replace(/_/g,' ')}</span>${i.details?.folder_unit?' <span class="cat-tag" style="background:#4a90d922;color:#4a90d9;border:1px solid #4a90d955">📁 unit</span>':''}${i.details?.rule_keep?' <span class="cat-tag" style="background:var(--yellow)22;color:var(--yellow);border:1px solid var(--yellow)55">keep</span>':''}${i.details?.rule_matched&&!i.details?.rule_keep?` <span class="cat-tag" style="background:var(--accent)22;color:var(--accent);border:1px solid var(--accent)55">rule</span>`:''}${i.details?.llm_assisted?' 🤖':''}</td>
+      <td><span class="cat-tag" style="background:${c}22;color:${c};border:1px solid ${c}55">${i.category.replace(/_/g,' ')}</span>${i.details?.console?` <span class="cat-tag" style="background:#6ab04c22;color:#6ab04c;border:1px solid #6ab04c55">${esc(i.details.console)}</span>`:''}${i.details?.folder_unit?' <span class="cat-tag" style="background:#4a90d922;color:#4a90d9;border:1px solid #4a90d955">📁 unit</span>':''}${i.details?.rule_keep?' <span class="cat-tag" style="background:var(--yellow)22;color:var(--yellow);border:1px solid var(--yellow)55">keep</span>':''}${i.details?.rule_matched&&!i.details?.rule_keep?` <span class="cat-tag" style="background:var(--accent)22;color:var(--accent);border:1px solid var(--accent)55">rule</span>`:''}${i.details?.llm_assisted?' 🤖':''}</td>
       <td style="color:var(--muted)">${i.intent.replace(/_/g,' ')}</td>
       <td><span class="conf-bar"><i style="width:${conf}%;background:${conf>=80?'var(--green)':conf>=60?'var(--yellow)':'var(--red)'}"></i></span>${conf}%</td>
       <td class="mono" style="color:var(--muted)">${i.suggested_destination?esc(i.suggested_destination):'—'}</td>

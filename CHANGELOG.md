@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.6] - 2026-08-21
+
+### Added
+
+- **ROM & console classification** — 40+ unambiguous console extensions map to
+  per-console destinations (`data/roms/snes/`, `data/roms/nds/`, `data/roms/3ds/`,
+  `data/roms/switch/`…): SNES (.sfc/.smc), NES (.nes/.fds), N64 (.z64/.n64/.v64),
+  GB/GBC/GBA, Virtual Boy, DS, 3DS (.3ds/.cia/.cci), Switch (.nsp/.xci),
+  GameCube/Wii (.gcm/.rvz/.wbfs/.wia/.wad), Sega (.sms/.gen/.sg/.cdi/.gdi),
+  PC Engine, Atari (2600/7800/Lynx/Jaguar/8-bit/ST), ColecoVision, Vectrex,
+  WonderSwan, Neo Geo (+Pocket), Xbox/Xbox 360
+- **Ambiguous disc disambiguation** — `.iso/.bin/.cue/.img/.chd/…` become game
+  discs only with a region tag `(USA)`, verified-dump `[!]`, or explicit console
+  word (`psx`, `ps2`, `gamecube`, `dreamcast`…); otherwise OS-image routing is
+  unchanged. Console-less tagged discs go to `data/roms/disc/`
+- **Homebrew detection** — `*.3dsx` (3DS), `*.dol` (Wii), `*.vpk` (PS Vita)
+  route to `data/homebrew/<console>/`
+- **Emulator intent** — ePSXe, DuckStation, PCSX2, PPSSPP, RPCS3, Dolphin,
+  Project64, RetroArch, MAME, Snes9x, mGBA, Cemu, Yuzu, Citra, melonDS, Xenia…
+  route to `data/emulators/<platform>/`
+- **Zipped ROM detection** — `.zip` contents are identified by peeking at the
+  central directory (no decompression); a console majority routes the whole zip
+  to `data/roms/<console>/`, homebrew packs to `data/homebrew/<console>/`.
+  Plain and corrupt zips remain archives
+- **Folder-name hints** — when a zip's contents or an extension-less file can't
+  identify its console, the parent/grandparent folder names are checked against
+  ~70 console keywords (`SNES`, `NES Roms`, `Sony PSP`, `GameBoy Advance`…)
+
 ## [1.4.5] - 2026-08-21
 
 ### Added
@@ -187,7 +215,8 @@ image.
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.5...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.6...HEAD
+[1.4.6]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.5...v1.4.6
 [1.4.5]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.4...v1.4.5
 [1.4.4]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.3...v1.4.4
 [1.4.3]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...v1.4.3

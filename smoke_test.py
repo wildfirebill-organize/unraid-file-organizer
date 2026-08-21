@@ -374,5 +374,140 @@ assert same.details.get("media_parsed") == "episode" \
     f"precedence control failed: {same.suggested_destination}"
 print("[OK ] Keep-in-place rule: channel video untouched; without the rule it routes to tv/")
 
+# ---------- ROM / console / homebrew / emulator classification ----------
+rom_files = {
+    "Super Mario World (USA).sfc": "snes",
+    "Chrono Trigger.smc": "snes",
+    "Super Mario Bros..nes": "nes",
+    "Legend of Zelda - Ocarina of Time.z64": "n64",
+    "Tetris.gb": "gb",
+    "Pokemon Emerald Version.gba": "gba",
+    "Mario Kart DS.nds": "nds",
+    "Fire Emblem Awakening.3ds": "3ds",
+    "Animal Crossing - New Leaf.cia": "3ds",
+    "Zelda Breath of the Wild.nsp": "switch",
+    "Mario Odyssey.xci": "switch",
+    "Sonic the Hedgehog.sms": "sms",
+    "Golden Axe.gen": "genesis",
+    "Bonk's Revenge.pce": "pcengine",
+    "Activision.a26": "atari2600",
+    "Ms. Pac-Man.cdi": "dreamcast",
+    "Harvest Moon.wbfs": "wii",
+    "Twilight Princess.rvz": "wii",
+}
+for fname in rom_files:
+    p = tmp / "downloads" / fname
+    p.write_bytes(b"\x00" * 16)
+
+homebrew_files = {"homebrew_menu.3dsx": "3ds", "usbloader_gx.dol": "wii", "RetroFlow.vpk": "psvita"}
+for fname in homebrew_files:
+    (tmp / "downloads" / fname).write_bytes(b"\x00" * 16)
+
+(tmp / "downloads" / "epsxe.exe").write_bytes(b"MZ" + b"\x00" * 40)
+(tmp / "downloads" / "Final Fantasy VII (USA).bin").write_bytes(b"\x00" * 16)
+(tmp / "downloads" / "Tekken 3 PSX.bin").write_bytes(b"\x00" * 16)
+
+for fname, want_console in rom_files.items():
+    cls = classifier.classify(tmp / "downloads" / fname)
+    assert cls.category.value == "game_rom", f"{fname}: cat={cls.category.value}"
+    assert cls.details.get("console") == want_console, f"{fname}: console={cls.details.get('console')}"
+    assert cls.suggested_location == f"/mnt/user/data/roms/{want_console}/", \
+        f"{fname}: dest={cls.suggested_location}"
+print(f"[OK ] ROMs: {len(rom_files)} consoles detected, each routed to data/roms/<console>/")
+
+for fname, want_console in homebrew_files.items():
+    cls = classifier.classify(tmp / "downloads" / fname)
+    assert cls.category.value == "homebrew" and cls.details.get("console") == want_console, \
+        f"{fname}: {cls.category.value}/{cls.details.get('console')}"
+    assert cls.suggested_location == f"/mnt/user/data/homebrew/{want_console}/"
+print("[OK ] Homebrew: 3dsx/dol/vpk -> data/homebrew/<console>/")
+
+emu = classifier.classify(tmp / "downloads" / "epsxe.exe")
+assert emu.intent.value == "emulator" and emu.suggested_location == "/mnt/user/data/emulators/windows/", \
+    f"emulator wrong: {emu.intent.value}/{emu.suggested_location}"
+print("[OK ] Emulator: epsxe.exe -> data/emulators/windows/")
+
+# Ambiguous discs: region/console-word become ROMs; OS ISOs stay OS images
+ff7 = classifier.classify(tmp / "downloads" / "Final Fantasy VII (USA).bin")
+assert ff7.category.value == "game_rom" and ff7.details.get("console") == "disc", \
+    f"region-tag disc failed: {ff7.category.value}/{ff7.details.get('console')}"
+tekken = classifier.classify(tmp / "downloads" / "Tekken 3 PSX.bin")
+assert tekken.details.get("console") == "psx", f"console word failed: {tekken.details.get('console')}"
+os_iso = classifier.classify(tmp / "downloads" / "win11_23h2_x64.iso")
+assert os_iso.category.value == "os_image", f"OS iso regressed: {os_iso.category.value}"
+ubuntu_iso = classifier.classify(tmp / "downloads" / "ubuntu-24.04-desktop-amd64.iso")
+assert ubuntu_iso.category.value == "os_image", f"ubuntu regressed: {ubuntu_iso.category.value}"
+print("[OK ] Disc disambiguation: (USA)/PSX hints -> roms; win11/ubuntu ISOs stay os_image")
+
+# ---------- Zipped ROMs ----------
+import zipfile as _zf
+zip_cases = [
+    ("Super Mario Bros..zip", {"Super Mario Bros..nes"}, "game_rom", "nes"),
+    ("Secret of Mana.zip", {"Secret of Mana.sfc", "readme.txt"}, "game_rom", "snes"),
+    ("Pokemon Emerald (U).zip", {"Pokemon Emerald.gba"}, "game_rom", "gba"),
+    ("3ds homebrew pack.zip", {"homebrew.3dsx", "icon.png"}, "homebrew", "3ds"),
+]
+for zname, members, want_cat, want_console in zip_cases:
+    zp = tmp / "downloads" / zname
+    with _zf.ZipFile(zp, "w") as zf:
+        for m in members:
+            zf.writestr(m, b"\x00" * 16)
+    cls = classifier.classify(zp)
+    assert cls.category.value == want_cat and cls.details.get("console") == want_console, \
+        f"{zname}: {cls.category.value}/{cls.details.get('console')}"
+    assert cls.suggested_location == f"/mnt/user/data/{ 'roms' if want_cat=='game_rom' else 'homebrew' }/{want_console}/", \
+        f"{zname}: dest={cls.suggested_location}"
+
+# Non-ROM zip stays an archive
+plain_zip = tmp / "downloads" / "documents_backup.zip"
+with _zf.ZipFile(plain_zip, "w") as zf:
+    zf.writestr("notes.txt", "hello")
+    zf.writestr("photo.jpg", b"\xff\xd8")
+plain = classifier.classify(plain_zip)
+assert plain.category.value == "archive", f"plain zip regressed: {plain.category.value}"
+
+# Corrupt zip degrades to archive instead of crashing
+bad_zip = tmp / "downloads" / "corrupt.zip"
+bad_zip.write_bytes(b"PK\x03\x04garbage")
+broken = classifier.classify(bad_zip)
+assert broken.category.value == "archive", f"corrupt zip: {broken.category.value}"
+print("[OK ] Zipped ROMs: nes/sfc/gba zips + 3dsx pack routed by contents; plain/corrupt zips stay archives")
+
+# ---------- Folder-name hints ----------
+folder_cases = [
+    # zip with unidentifiable contents, console named by parent folder
+    ("Roms/SNES", "Kirby.zip", {"data.bin"}, "snes"),
+    ("Roms/NES Roms", "game.zip", {"rom.bin"}, "nes"),
+    ("Consoles/Sony PSP", "collection.zip", {"game.iso"}, "psp"),
+    # extension-less flash-cart style dump
+    ("Roms/Genesis", "mystery", None, "genesis"),
+    # grandparent hint (two levels up)
+    ("Handhelds/GameBoy Advance", "pack.zip", {"dump.bin"}, "gba"),
+]
+for sub, fname, members, want_console in folder_cases:
+    d = tmp / "downloads" / sub
+    d.mkdir(parents=True, exist_ok=True)
+    fp = d / fname
+    if members is None:
+        fp.write_bytes(b"\x00" * 16)
+    else:
+        with _zf.ZipFile(fp, "w") as zf:
+            for m in members:
+                zf.writestr(m, b"\x00" * 16)
+    cls = classifier.classify(fp)
+    assert cls.category.value == "game_rom" and cls.details.get("console") == want_console, \
+        f"{sub}/{fname}: {cls.category.value}/{cls.details.get('console')}"
+    assert cls.suggested_location == f"/mnt/user/data/roms/{want_console}/"
+
+# Control: same zip shape in a non-console folder stays an archive
+neutral = tmp / "downloads" / "misc stuff"
+neutral.mkdir(parents=True, exist_ok=True)
+nz = neutral / "pack.zip"
+with _zf.ZipFile(nz, "w") as zf:
+    zf.writestr("rom.bin", b"\x00")
+nc = classifier.classify(nz)
+assert nc.category.value == "archive", f"neutral folder regressed: {nc.category.value}"
+print("[OK ] Folder hints: SNES/NES/PSP/Genesis/GBA folders identify ambiguous zips; neutral folders don't")
+
 print(f"\n{'ALL CHECKS PASSED' if fails == 0 else f'{fails} CHECKS FAILED'}")
 sys.exit(1 if fails else 0)
