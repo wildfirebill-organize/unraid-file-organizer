@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-21
+
+### Changed
+
+- CI: bumped all workflow actions to Node 24 runtime majors
+  (checkout v5, setup-buildx v4, setup-qemu v4, login v4, metadata v6,
+  build-push v7) — clears GitHub's Node 20 deprecation warnings
+
 ## [1.4.0] - 2026-08-20
 
 ### Added
@@ -116,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.1.0...v1.2.0
