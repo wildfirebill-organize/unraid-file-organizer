@@ -529,7 +529,7 @@ async function saveConfig(){
   try { config.category_destinations = parseOverrides(); }
   catch(e){ toast(e.message); return; }
   try{ config = await api('/config',{method:'PUT',body:JSON.stringify(config)}); toast('Settings saved'); updateModeBadge(); renderRules(); loadOverridesEditor(); }
-  catch(e){ toast('Save failed: '+e.message); loadConfig(); }
+  catch(e){ toast('Save failed: '+e.message, 9000); loadConfig(); }
 }
 
 async function addManaged(){

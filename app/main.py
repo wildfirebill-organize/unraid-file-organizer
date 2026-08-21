@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="Unraid File Organizer", version="1.4.2", lifespan=lifespan)
+app = FastAPI(title="Unraid File Organizer", version="1.4.3", lifespan=lifespan)
 
 app.include_router(api_router)
 

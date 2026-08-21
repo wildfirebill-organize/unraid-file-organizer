@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-08-21
+
+### Fixed
+
+- **Config not saving on Unraid** — the container now starts as root, takes
+  ownership of the `/config` volume (Docker creates it root-owned), then drops
+  to the unprivileged app user via gosu. Previously every settings write hit
+  PermissionError and the UI silently reverted to an empty config.
+- Config-save failures now surface the real reason (HTTP 500 with detail)
+  instead of an opaque error; UI error toasts last longer.
+
 ## [1.4.2] - 2026-08-21
 
 ### Added
@@ -138,7 +149,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   confidence bars, and plan preview
 - Docker deployment (Dockerfile + compose) and release-only GHCR workflow
 
-[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/wildfirebill-organize/unraid-file-organizer/compare/v1.3.0...v1.4.0

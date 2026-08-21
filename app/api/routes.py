@@ -46,6 +46,16 @@ def save_config(new_config: OrganizerConfig):
         return config_manager.update(new_config)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        logger.exception("Config write denied")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Cannot write config file ({config_manager.config_path}): {e}. "
+            "Check that the /config volume is writable by the container.",
+        )
+    except Exception as e:
+        logger.exception("Config save failed")
+        raise HTTPException(status_code=500, detail=f"Config save failed: {e}")
 
 
 # ---------- Scan ----------
